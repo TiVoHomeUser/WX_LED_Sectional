@@ -1,7 +1,7 @@
 #ifndef LEDString_ino
 #define LEDString_ino "Jan 2, 2021"
 
-#include <fastLED.h>
+#include <FastLED.h>
 
 
 /* This section only applies if you have an ambient light sensor connected */

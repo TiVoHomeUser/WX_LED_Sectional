@@ -13,7 +13,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
-#include "user_settings.ino"
+#include "user_settings.h"
 #include "WX_LED_Sectional.h"
 
 const char* ssid = STASSID;
@@ -33,14 +33,15 @@ const unsigned int loop_interval = WX_REFRESH_INTERVAL * 60;    // How often to 
 unsigned int loop_time = loop_interval;                         // Force WX update first loop
 
 
-#include "utilities.ino"
+#include "utilities.h"
 #include "LEDString.h"
-#include "notFoundPage.ino"
-#include "testPage.ino"
-#include "rootPage.ino"
-#include "stationPage.ino"
-#include "infoPage.ino"
-#include "setup.ino"
+#include "notFoundPage.h"
+#include "testPage.h"
+#include "rootPage.h"
+#include "stationPage.h"
+#include "infoPage.h"
+#include "setup.h"
+#include "metars.h"
 
 
 
@@ -115,9 +116,3 @@ showFree(true);
 	  idLED(getCommand()); // process any input from terminal
   }
 }
-
-
-
-
-
-

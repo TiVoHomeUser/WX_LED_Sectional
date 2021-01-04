@@ -1,5 +1,67 @@
 #ifndef metars_ino
 #define metars_ino "Jan 2, 2021"
+
+void doColor(char* identifier, unsigned short int led, int wind, int gusts, char* condition, char* wxstring, const char* rawText){ //, boolean last) {
+  showFree( false );
+#if WX_DEBUG
+  Serial.print(F("\t")); Serial.print(identifier);
+  Serial.print(F(": "));
+  Serial.print(condition);
+  Serial.print(F(" "));
+  Serial.print(wind);
+  if (gusts > 0) {
+    Serial.print(F(" G"));
+    Serial.print(gusts);
+    Serial.print(F("kts\t"));
+  } else {
+    Serial.print(F("kts    \t"));
+  }
+  Serial.print(F(" LED "));
+  Serial.print(led);
+  Serial.print(F(" WX: "));
+  Serial.print(wxstring);
+  Serial.print(F(" Raw: "));
+  Serial.println(rawText);
+#endif
+  if (strstr(wxstring, "TS") != NULL) {
+    Serial.println(F("... found lightning!"));
+    lightningLeds.push_back(led);
+    mtrsf[led].mtrlighting = true;         // For Button to display lighting
+  }
+
+  // 1 VFR, 2 MVFR, 3 LIFR, 4 IFR 0 unknown  maybe use leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
+  // TODO ********** NOTE: AIM defines 1 LIFR, 2 IFR, 3 MVFR, 4 VFR also can add WIND CIG FG Example "IFR FG" "LIFR CIG" "VFR WIND" *******
+  if (strcmp(condition, "LIFR") == 0) { // || identifier == "LIFR") {
+    leds[led] = CRGB::Magenta;
+    mtrsf[led].mtrstat = 3;
+  }
+  else if (strcmp(condition, "IFR") == 0) {
+    leds[led] = CRGB::Red;
+    mtrsf[led].mtrstat = 4;
+  }
+  else if (strcmp(condition, "MVFR") == 0) {
+    leds[led] = CRGB::Blue;
+    mtrsf[led].mtrstat = 2;
+  }
+  else if (strcmp(condition, "VFR") == 0) {
+    mtrsf[led].mtrstat = 1;
+    if ((wind > WIND_THRESHOLD || gusts > WIND_THRESHOLD) && DO_WINDS) {
+      leds[led] = CRGB::Yellow;
+    } else {
+      leds[led] = CRGB::Green;
+    }
+  } else {
+    leds[led] = CRGB::Black;
+    mtrsf[led].mtrstat = 0;   // 99 for airports defined as NULL 0 will still display for un-reporting stations
+  }
+  mtrsf[led].mtrspeed = wind;
+  mtrsf[led].mtrgusts = gusts;
+  mtrsf[led].rawText = rawText;
+  total_C_StringLen += strlen(rawText);
+  FastLED.show(); // Kid of cool update display as each down-loaded
+  // Note: causes the ones not loaded to go black and may be annoying
+} // doColor()
+
 // in good weather currentLine length = 220 I was getting much larger values when weather was bad b4 isAscii check was added
 // found 238
 // -> *** GT 220 currentLine.length() = 238
@@ -349,67 +411,6 @@ if(counter >= bigBlockSize) ooMemCnt++;
   return true;
 } // getMetars()
 
-
-void doColor(char* identifier, unsigned short int led, int wind, int gusts, char* condition, char* wxstring, const char* rawText){ //, boolean last) {
-  showFree( false );
-#if WX_DEBUG
-  Serial.print(F("\t")); Serial.print(identifier);
-  Serial.print(F(": "));
-  Serial.print(condition);
-  Serial.print(F(" "));
-  Serial.print(wind);
-  if (gusts > 0) {
-    Serial.print(F(" G"));
-    Serial.print(gusts);
-    Serial.print(F("kts\t"));
-  } else {
-    Serial.print(F("kts    \t"));
-  }
-  Serial.print(F(" LED "));
-  Serial.print(led);
-  Serial.print(F(" WX: "));
-  Serial.print(wxstring);
-  Serial.print(F(" Raw: "));
-  Serial.println(rawText);
-#endif
-  if (strstr(wxstring, "TS") != NULL) {
-    Serial.println(F("... found lightning!"));
-    lightningLeds.push_back(led);
-    mtrsf[led].mtrlighting = true;         // For Button to display lighting
-  }
-
-  // 1 VFR, 2 MVFR, 3 LIFR, 4 IFR 0 unknown  maybe use leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
-  // TODO ********** NOTE: AIM defines 1 LIFR, 2 IFR, 3 MVFR, 4 VFR also can add WIND CIG FG Example "IFR FG" "LIFR CIG" "VFR WIND" *******
-  if (strcmp(condition, "LIFR") == 0) { // || identifier == "LIFR") {
-    leds[led] = CRGB::Magenta;
-    mtrsf[led].mtrstat = 3;
-  }
-  else if (strcmp(condition, "IFR") == 0) {
-    leds[led] = CRGB::Red;
-    mtrsf[led].mtrstat = 4;
-  }
-  else if (strcmp(condition, "MVFR") == 0) {
-    leds[led] = CRGB::Blue;
-    mtrsf[led].mtrstat = 2;
-  }
-  else if (strcmp(condition, "VFR") == 0) {
-    mtrsf[led].mtrstat = 1;
-    if ((wind > WIND_THRESHOLD || gusts > WIND_THRESHOLD) && DO_WINDS) {
-      leds[led] = CRGB::Yellow;
-    } else {
-      leds[led] = CRGB::Green;
-    }
-  } else {
-    leds[led] = CRGB::Black;
-    mtrsf[led].mtrstat = 0;   // 99 for airports defined as NULL 0 will still display for un-reporting stations
-  }
-  mtrsf[led].mtrspeed = wind;
-  mtrsf[led].mtrgusts = gusts;
-  mtrsf[led].rawText = rawText;
-  total_C_StringLen += strlen(rawText);
-  FastLED.show(); // Kid of cool update display as each down-loaded
-  // Note: causes the ones not loaded to go black and may be annoying
-} // doColor()
 
 /*
 
