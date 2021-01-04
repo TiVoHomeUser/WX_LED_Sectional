@@ -11,3 +11,6 @@ Stations Desktop
 
 Stations Mobile
 ![Smart Phone](./StationPageNarrow.png)
+
+LED Sectional
+![Mich Chart](./LedSectional.jpg)
