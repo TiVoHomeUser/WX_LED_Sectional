@@ -3,3 +3,11 @@ Use an ESP8266 to download METARs for multiple airports displaying the metrology
 
 This version generates an HTML page that displays the Conditions,  Condition colors, METAR raw text and ID button for each station 
  
+ Root Page 
+![Root Page](./rootPage.png)
+
+Stations Desktop
+![Stations Desktop](./StationPageDesktop.png)
+
+Stations Mobile
+![Smart Phone](./StationPageNarrow.png)
