@@ -6,6 +6,21 @@
  *  https://github.com/WKHarmon/led-sectional
  *
  */
+/*
+ * 		NOTE:
+ * 		Due to memory (ram) fragmentation and available amount *DO NOT* use Strings. Anything that will not change put in Flash Prom see F() macro
+ * 		and PROGMEM. Remember there is a Maximum of 4MB of SRAM and the WX Download needs 30,000 continuous bytes.
+ *
+ * 		Libraries needed are
+ * 		 ESP8266mDNS
+ * 		 ESP8266WebServer
+ * 		 ESP8266WiFi
+ * 		 FastLED
+ * 		 SPI
+ *
+ * 		 I added EEPROM for debugging
+ *
+ */
 #include "Arduino.h"
 
 #include <ESP8266WiFi.h>
