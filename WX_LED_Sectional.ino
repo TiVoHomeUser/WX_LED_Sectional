@@ -39,7 +39,7 @@ unsigned int loop_time = loop_interval;                         // Force WX upda
 #include "testPage.h"
 #include "rootPage.h"
 #include "stationPage.h"
-#include "infoPage.h"
+//#include "infoPage.h"
 #include "setup.h"
 #include "metars.h"
 

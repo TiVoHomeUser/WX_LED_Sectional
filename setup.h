@@ -48,8 +48,8 @@ void setupServer(void){
 	  server.on(F("/reboot")   ,	rebootPage);
 	  server.on(F("/sliderpage"),	slider_page);
 	  server.on(F("/wxID"), 		iDLED);  // For html get function that calls flash LEDs
-	  server.on(F("/eprom"),		eepromRead);
-	  server.on(F("/info"),			infoPage);
+	  //server.on(F("/eprom"),		eepromRead);
+	  //server.on(F("/info"),			infoPage);
 
 	  server.begin();
 	  Serial.println("HTTP server started");

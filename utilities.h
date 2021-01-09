@@ -223,87 +223,87 @@ static int m_overflow;
     unsigned int cycleErrCount = 0;  // for debug count the number of failed downloads since last reboot
 
 
-/*
- *
- * 								Eprom
- *
- */
-#include <EEPROM.h>
-
-
-/*
- *        Read EEPROM output to serial monitor
- *        returns getData webpage
- *
- */
-#define BLOCK 512 //2048 //3952 //1024 //4096 //512    // Size of eprom
-void readEeprom(){
-//espInfo();
-//Serial.print("EEPROM.length() = "); Serial.println(EEPROM.E2END);
-server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-server.send(200, "text/plain", "EEprom read");
-
-EEPROM.begin(BLOCK);
-Serial.print(F("EEPROM.length() = ")); Serial.println(EEPROM.length());
-server.sendContent("EEPROM.length() = "); server.sendContent(String(EEPROM.length()).c_str());
-//EEPROM.write(0,0xA5);
-  byte value;
-  char asciistr[17] = "\0";  // For ascii output
-  //asciistr[16] = '\0';
-  int asciiptr = 0;
-  char hexvals[4];    // For byte to Hex conversion with room for a space and null
-
-  Serial.println(F("\n\tStart of eprom dump\n"));
-  server.sendContent("\n\tStart of eEprom dump\n");
-
-
-//  Serial.print(0);
-//  Serial.print('\t');
-  for(int address = 0; address < BLOCK; address++){
-    if(asciiptr == 0){    // used to print string of 16 chars then pointer is reset to 0
-      // new line
-      Serial.println(" ");
-      Serial.print(address);
-      Serial.print("\t");
-
-    }
-    // read a byte from the current address of the EEPROM
-  value = EEPROM.read(address);
-
-  if(isAscii(value)) {
-    asciistr[asciiptr] = toAscii(value);
-  } else {
-    asciistr[asciiptr] = '-';     // non ASCII char
-  }
-   if(asciistr[asciiptr] < 0X30) asciistr[asciiptr] = '.'; // not printable char
-
-  sprintf(hexvals, "%02X ", value);   // Make it 2 spaces hex value
-  Serial.print(hexvals);
-
-  // advance to the next address of the EEPROM
-  asciiptr = asciiptr +1;
-
-  if(asciiptr > 15) {
-    asciiptr = 0;
-    Serial.print("\t\"");
-    Serial.print(asciistr);
-    Serial.print("\"");
-
-//    // new line
-//    Serial.print(address);
-//    Serial.print("\t");
-  }
- }
-// return getData();
-  Serial.println();
-  //server.stop();
-}
-
-
-void eepromRead() {
-  readEeprom();
-  server.send(200, "text/html", goBack);
-}
+///*
+// *
+// * 								Eprom
+// *
+// */
+//#include <EEPROM.h>
+//
+//
+///*
+// *        Read EEPROM output to serial monitor
+// *        returns getData webpage
+// *
+// */
+//#define BLOCK 512 //2048 //3952 //1024 //4096 //512    // Size of eprom
+//void readEeprom(){
+////espInfo();
+////Serial.print("EEPROM.length() = "); Serial.println(EEPROM.E2END);
+//server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+//server.send(200, "text/plain", "EEprom read");
+//
+//EEPROM.begin(BLOCK);
+//Serial.print(F("EEPROM.length() = ")); Serial.println(EEPROM.length());
+//server.sendContent("EEPROM.length() = "); server.sendContent(String(EEPROM.length()).c_str());
+////EEPROM.write(0,0xA5);
+//  byte value;
+//  char asciistr[17] = "\0";  // For ascii output
+//  //asciistr[16] = '\0';
+//  int asciiptr = 0;
+//  char hexvals[4];    // For byte to Hex conversion with room for a space and null
+//
+//  Serial.println(F("\n\tStart of eprom dump\n"));
+//  server.sendContent("\n\tStart of eEprom dump\n");
+//
+//
+////  Serial.print(0);
+////  Serial.print('\t');
+//  for(int address = 0; address < BLOCK; address++){
+//    if(asciiptr == 0){    // used to print string of 16 chars then pointer is reset to 0
+//      // new line
+//      Serial.println(" ");
+//      Serial.print(address);
+//      Serial.print("\t");
+//
+//    }
+//    // read a byte from the current address of the EEPROM
+//  value = EEPROM.read(address);
+//
+//  if(isAscii(value)) {
+//    asciistr[asciiptr] = toAscii(value);
+//  } else {
+//    asciistr[asciiptr] = '-';     // non ASCII char
+//  }
+//   if(asciistr[asciiptr] < 0X30) asciistr[asciiptr] = '.'; // not printable char
+//
+//  sprintf(hexvals, "%02X ", value);   // Make it 2 spaces hex value
+//  Serial.print(hexvals);
+//
+//  // advance to the next address of the EEPROM
+//  asciiptr = asciiptr +1;
+//
+//  if(asciiptr > 15) {
+//    asciiptr = 0;
+//    Serial.print("\t\"");
+//    Serial.print(asciistr);
+//    Serial.print("\"");
+//
+////    // new line
+////    Serial.print(address);
+////    Serial.print("\t");
+//  }
+// }
+//// return getData();
+//  Serial.println();
+//  //server.stop();
+//}
+//
+//
+//void eepromRead() {
+//  readEeprom();
+//  server.send(200, "text/html", goBack);
+//}
 
 
 #endif
