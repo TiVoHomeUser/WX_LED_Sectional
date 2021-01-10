@@ -48,8 +48,6 @@ void setupServer(void){
 	  server.on(F("/reboot")   ,	rebootPage);
 	  server.on(F("/sliderpage"),	slider_page);
 	  server.on(F("/wxID"), 		iDLED);  // For html get function that calls flash LEDs
-	  //server.on(F("/eprom"),		eepromRead);
-	  //server.on(F("/info"),			infoPage);
 
 	  server.begin();
 	  Serial.println("HTTP server started");
@@ -66,7 +64,7 @@ void setupServer(void){
 
                                             setupAirportString()
                             to prevent memory fragmentation create the airport string only once
-                            function may be moved to be part of setup
+
                             thoughts:
                               - Break up the new airport string (without NULL stations) to download a few smaller segments that should use less memory.
                               - Either use a structure for the substrings or an index array to store the last index of the last station in the airport array
