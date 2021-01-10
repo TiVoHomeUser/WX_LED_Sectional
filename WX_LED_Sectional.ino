@@ -36,7 +36,6 @@ const char* password = STAPSK;
 const char* hostname = MYHOSTNAME;
 
 ESP8266WebServer server(80);
-//ESP8266WiFiClass WiFic;
 
 //const int led = 13;
 #define NO_EVENT    0
@@ -54,7 +53,6 @@ unsigned int loop_time = loop_interval;                         // Force WX upda
 #include "testPage.h"
 #include "rootPage.h"
 #include "stationPage.h"
-//#include "infoPage.h"
 #include "setup.h"
 #include "metars.h"
 
@@ -64,7 +62,6 @@ void setup(void) {
 	delay(100);			// some boards are unstable
 	setupBiLED();
 	setupSerial();
-	//readEeprom();
 	setupBigBlock();
 	setupAirportString();
 	setupConnection();
