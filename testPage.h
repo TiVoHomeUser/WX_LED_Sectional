@@ -8,7 +8,6 @@
  *
  */
 void testPage(void){
-////  if(wxbusy) return;
   Serial.print(F("Test Page     \tClient IP = "));
   Serial.print(server.client().remoteIP().toString());
   Serial.print(F("\tWiFi SSID: ")); Serial.println(WiFi.SSID());
@@ -37,7 +36,6 @@ void testPage(void){
                       "</html>"));
   server.client().stop();
   my_Event = MY_TEST;
-//  //loop_time = loop_interval;     // force update directly after test
 } // testPage()
 
 /*
@@ -47,8 +45,6 @@ void testPage(void){
  *
  */
 void iDLED(void){
-////  if(wxbusy) return;
-//
   if(server.hasArg("wxid")){
     Serial.print(F("Hello iDLED called LED "));
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);

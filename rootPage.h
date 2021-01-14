@@ -14,19 +14,13 @@
  */
 
 void rootPage(){
-//  if(wxbusy) return;
-
   Serial.print(F("Hello from rootPage     \tClient IP = "));
   Serial.print(server.client().remoteIP().toString());
   Serial.print(F("\tWiFi SSID: ")); Serial.println(WiFi.SSID());
   Serial.print(F(" Light Sensor = ")); Serial.print(brightness);
   Serial.print(F(" rtmaxl = ")); Serial.print(rtmaxl);
   Serial.print(F("\t # WX stations = ")); Serial.println(actualNumAirports);
-
-  // Serial.print(F("\tcurrentLineMax = ")); Serial.println(currentLineMax);
-
   Serial.print(F("\tUptime = ")); Serial.print(uptime());
-
 
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send_P( 200, "text/html", htmlHeadStr);
@@ -45,15 +39,11 @@ void rootPage(){
   server.sendContent(" / "); server.sendContent(b2Scs(cycleErrCount)); //String(cycleErrCount).c_str());
   server.sendContent(" Light = "); server.sendContent(b2Scs(brightness)); //String(brightness).c_str());
   server.sendContent(" Adjust = "); server.sendContent(b2Scs(lightOffset)); //String(lightOffset).c_str());
-
-  //Server.sendContent(F(" currentLineMax = ")); Server.sendContent(b2Scs(currentLineMax)); //String(currentLineMax).c_str());
-
-
   server.sendContent(F("</h2>\n<h6 align=\"center\" style=\"color.blue;margin:15px;\">"));
   server.sendContent(F( copyright)); server.sendContent(F(" ")); server.sendContent(F(compiledate));
   server.sendContent(F("</h6>\n"
                        "<h4 align=\"center\" style=\"color.blue;margin:15px;\">build ")); server.sendContent(F( compiledate));
-  	  	  	  	  	   server.sendContent(F(" Uptime: ")); server.sendContent(uptime());
+  	  	  	  	  	   server.sendContent(F(" Uptime (D:H:M:S) ")); server.sendContent(uptime());
   	  	  	  	  	   server.sendContent(F(" Next update: ")); server.sendContent(b2Scs((loop_interval - loop_time) / 60));	// Minutes
   	  	  	  	  	   server.sendContent(F(":"));
   	  	  	  	  	   server.sendContent(b2Scs((loop_interval - loop_time) - (((loop_interval - loop_time) / 60) * 60)));		// Seconds

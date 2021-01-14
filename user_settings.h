@@ -18,12 +18,12 @@ user_settings.ino
 
 #define NUM_AIRPORTS 100                // This is really the number of LEDs not Stations
 // FYI using test array 32 = 24, 44 = 32, 60 = 40, 73 = 48, 75 = 50, 86 = 56, 100 = 64,  132 = 96, 136 = 100, 140 = 104
-const static int numOfAirportsGet  = 32; //27; //30; //32; //NUM_AIRPORTS; // Number of airports to download per loop
-#define WX_REFRESH_INTERVAL  15          // Minutes between WX updates
+const static int numOfAirportsGet = 32; //27; //30; //32; //NUM_AIRPORTS; // Number of airports to download per loop
+#define WX_REFRESH_INTERVAL  15         // Minutes between WX updates
 
 #define WIND_THRESHOLD 25               // Maximum wind speed for green, otherwise the LED turns yellow
-#define DO_LIGHTNING true               // Lightning uses more power, but is cool.
 #define DO_WINDS true                   // color LEDs for high winds
+#define DO_LIGHTNING true               // Lightning uses more power, but is cool.
 
 #define USE_LIGHT_SENSOR true //false   // Set USE_LIGHT_SENSOR to true if you're using any light sensor.
 

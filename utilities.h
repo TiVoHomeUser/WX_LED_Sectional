@@ -172,9 +172,8 @@ static int m_overflow;
   strcat(m_uptimeCstr, b2cs(m_days));  strcat(m_uptimeCstr, ":");
   strcat(m_uptimeCstr, b2cs(m_hours)); strcat(m_uptimeCstr, ":");
   strcat(m_uptimeCstr, b2cs(m_mins));  strcat(m_uptimeCstr, ":");
-  strcat(m_uptimeCstr, b2cs(m_secs));
-  // TODO Why? m_lastvalue - millis(); // allow for more than 49 days
-  //Serial.print(" Uptime= "); Serial.println(m_uptimeCstr);
+  strcat(m_uptimeCstr, b2cs(m_secs));  //strcat(m_uptimeCstr, ":");
+  m_lastvalue = millis(); // update value to check for overflow to allow for more than 49 days
   return m_uptimeCstr;
  }
 
@@ -187,7 +186,6 @@ static int m_overflow;
         on_Board_LED_state = false;
       } else {
         digitalWrite(LED_BUILTIN, LOW);     // Turn the LED on
-  showFree(false); // for debugging memory frag problems
         on_Board_LED_state = true;
       }
   }
@@ -217,7 +215,7 @@ static int m_overflow;
     const char goBack[] PROGMEM = "<!DOCTYPE html> <script language=\"JavaScript\" type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\",10); </script>";
 
     const char ooMem[] = "WX Out of Memory";   // This message is pointed to after the bigBlock array is full
-    const char offLine[] = "Off-Line";
+    const char offLine[] = "Off-Line";         // Used if station does not return value
 
     unsigned int cycleCount = 0;     // for debug count the number of downloads since last reboot
     unsigned int cycleErrCount = 0;  // for debug count the number of failed downloads since last reboot
