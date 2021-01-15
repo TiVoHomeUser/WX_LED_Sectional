@@ -48,8 +48,6 @@ void setupServer(void){
 	  server.on(F("/reboot")   ,	rebootPage);
 	  server.on(F("/sliderpage"),	slider_page);
 	  server.on(F("/wxID"), 		iDLED);  // For html get function that calls flash LEDs
-	  //server.on(F("/eprom"),		eepromRead);
-	  //server.on(F("/info"),			infoPage);
 
 	  server.begin();
 	  Serial.println("HTTP server started");
@@ -66,7 +64,7 @@ void setupServer(void){
 
                                             setupAirportString()
                             to prevent memory fragmentation create the airport string only once
-                            function may be moved to be part of setup
+
                             thoughts:
                               - Break up the new airport string (without NULL stations) to download a few smaller segments that should use less memory.
                               - Either use a structure for the substrings or an index array to store the last index of the last station in the airport array
@@ -95,9 +93,6 @@ void setupServer(void){
  // 100 active stations needs = 500 + 7200 total of 7,200 Bytes
  // WX download connect needs  30000 continuous bytes
 
- // #define bigBlockSize (1024 * 4)
- // #define bigBlockSize (1024 * 5)
- // #define bigBlockSize (1024 * 6)
  // #define bigBlockSize (1024 * 7)  // 7 K
  // #define bigBlockSize (512 * 15)  // 7.5 k Some out of memory 4 today
  // #define bigBlockSize (256 * 31)  // 7.75 k
@@ -108,43 +103,15 @@ void setupServer(void){
  // #define bigBlockSize (128 * 71)   // 8.875K Max with 96 stations
  // #define bigBlockSize (1024 * 10)
 
- //------------------------------- with 104 active stations -----------------------------------
- //#define bigBlockSize 8000    // Connects and downloads  one WX out of memory               Free Heap = 31664 HeapFragmentation = 1 MaxFreeBlockSize = 31536
-                                //                                                                        30904 HeapFragmentation = 2 MaxFreeBlockSize = 30576
-                                // After web page                                             Free Heap = 30688 HeapFragmentation = 2 MaxFreeBlockSize = 30280
-                                //                                                            Free Heap = 31480 HeapFragmentation = 2 MaxFreeBlockSize = 30960
-                                // After Root Page                                            Free Heap = 31264 HeapFragmentation = 1 MaxFreeBlockSize = 30960
-                                //                                                            Free Heap = 30880 HeapFragmentation = 2 MaxFreeBlockSize = 30456
-                                // After Web                                                  Free Heap = 31072 HeapFragmentation = 11  MaxFreeBlockSize = 27648
-
- //#define bigBlockSize 8192    //                                                            Free Heap = 31472 HeapFragmentation = 1 MaxFreeBlockSize = 31344
-                                // Both Light and Stations WEB                                Free Heap = 30496 HeapFragmentation = 2 MaxFreeBlockSize = 30120
-                                //                                                            Free Heap = 31288 HeapFragmentation = 3 MaxFreeBlockSize = 30416
-                                // Adj = 50 both Web       conn failed                        Free Heap = 30112  HeapFragmentation = 2 MaxFreeBlockSize = 29704
-
-// #define bigBlockSize 8792    //                                                            Free Heap = 30872 HeapFragmentation = 1 MaxFreeBlockSize = 30744
-                                //                                                            Free Heap = 30872 HeapFragmentation = 1 MaxFreeBlockSize = 30744
-
-// #define bigBlockSize 8832      //                                                            Free Heap = 30832 HeapFragmentation = 1 MaxFreeBlockSize = 30704
-                                // Set offset and Web                                         Free Heap = 30672 HeapFragmentation = 3 MaxFreeBlockSize = 29952
-                                // Just offset -100         connection failed                 Free Heap = 30048 HeapFragmentation = 2 MaxFreeBlockSize = 29640
-                                // Offset +50                trap                              Free Heap = 29856 HeapFragmentation = 2 MaxFreeBlockSize = 29432
-
- //#define bigBlockSize 9000    // Connects and downloads                                     Free Heap = 30664 HeapFragmentation = 1 MaxFreeBlockSize = 30536
-                                // Trap after web access second download                      Free Heap = 29688 HeapFragmentation = 1 MaxFreeBlockSize = 29528
- //#define bigBlockSize 10000   // Traps                                                      Free Heap = 29664 HeapFragmentation = 1 MaxFreeBlockSize = 29536
- //#define bigBlockSize 11000   // Unable to allocate memory for SSL structures and buffers.  Free Heap = 28664 HeapFragmentation = 1 MaxFreeBlockSize = 28536
 
 static char bigBlock[((sizeof(char) * bigBlockSize) +2)];     // add additional byte for terminator if the last block of data just happens to == bigBlockSize
-static int firstAvailable = 0;   // Tracks the next unused location in the bigBlockSize array
+static int firstAvailable = 0;                                // Tracks the next unused location in the bigBlockSize array
 void setupBigBlock(){
-  // Serial.println("Before big block"); showFree(true);
   // bigBlock = new char[((sizeof(char) * bigBlockSize) +1)]; // better to allocate memory outside of function that way the block is defined first
   for(int i = 0; i < bigBlockSize; i++){
     bigBlock[i] = '\0';
   }
   firstAvailable = 0;
-//  Serial.println("After big block"); showFree(true);
 }
 
 
@@ -218,7 +185,7 @@ void setupAirportString() {
 
   // Finished creating working c-string.
   // now break into several null terminated sub c-strings
-  // link the index between the end of substring and airports limiting string compares to this subset when finding LED UD from the downloaded data
+  // link the index between the end of substring and airports limiting string compares to this subset when finding LED ID from the downloaded data
   airportStrings[0] = airportString; // noOfAirportStrings = 0 Always need the first c-string / substring
   // remove the last ','
   if( airportString[strlen(airportString) -1] == ','){
