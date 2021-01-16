@@ -12,22 +12,21 @@ static char metr_Retval[16];
 char* metr_cond(unsigned short int airportnumber){
   metr_Retval[0] = '\0';
   // add metr condition
-  //  mtrstat 1 VFR, 2 MVFR, 3 LIFR, 4 IFR 0 unknown 99 NULL maybe use leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
   switch(mtrsf[airportnumber].mtrstat){
-    case 0:
+    case UNKWN:
       strcat( metr_Retval, "Not Reporting"); //"Unknown";
       return metr_Retval;
       break;
-    case 1:
+    case VFR:
       strcat( metr_Retval, "VFR");
       break;
-    case 2:
+    case MVFR:
       strcat( metr_Retval, "MVFR");
       break;
-    case 3:
+    case LIFR:
       strcat( metr_Retval, "LIFR");
       break;
-    case 4:
+    case IFR:
       strcat( metr_Retval, "IFR");
       break;
     default:
@@ -131,7 +130,7 @@ void stationPage(int columns){
                         "\n<tr>"));
   int row = 1; // int maxrow = 3; // iphone 3 macbook 8;
   for(int i=0; i < NUM_AIRPORTS; i++){
-    if( mtrsf[i].mtrstat < 99 ){    // 99 for NULL location skip it
+    if( mtrsf[i].mtrstat < NOTUSED ){    // 99 for NULL location skip it
       server.sendContent(lEDButton(i));
       row++;
       if(row > columns){

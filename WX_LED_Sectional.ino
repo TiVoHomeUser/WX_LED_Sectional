@@ -3,7 +3,7 @@
 #define compiledate __DATE__
 /*
  * 	https://github.com/TiVoHomeUser/WX_LED_Sectional
- * 	inspired from https://led-sectional.kyleharmon.com  https://github.com/WKHarmon/led-sectional
+ * 	Original inspired from https://led-sectional.kyleharmon.com  https://github.com/WKHarmon/led-sectional
  *
  */
 /*

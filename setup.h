@@ -147,12 +147,12 @@ void setupAirportString() {
   for (int i = 0; i < NUM_AIRPORTS; i++) {
     if (strncmp_P("NULL", airports[i], 4) != 0)
       actualNumAirports++;
-    mtrsf[i].mtrlighting = false; // reset lightning
-    mtrsf[i].mtrstat = 99;      // 0 not reporting 99 NULL 1 VFR, 2 MVFR, 3 LIFR, 4 IFR 0 unknown  maybe use leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
-    mtrsf[i].mtrspeed = 0;      // wind in knots
-    mtrsf[i].mtrgusts = 0;      // reset wind gusts
-    //  mtrsf[i].mtrtime[0] = '\0';      // Observation Time Note: Replaced with rawText
-    mtrsf[i].rawText = ooMem;   // Default pointer to static "Out Of Memory"
+    mtrsf[i].mtrlighting = false;   // reset lightning
+    mtrsf[i].mtrstat = NOTUSED;
+    mtrsf[i].mtrspeed = 0;          // wind in knots
+    mtrsf[i].mtrgusts = 0;          // reset wind gusts
+    //  mtrsf[i].mtrtime[0] = '\0'; // Observation Time Note: Replaced with rawText
+    mtrsf[i].rawText = ooMem;       // Default pointer to static "Out Of Memory"
 }
 
   // These are created once for life never deleted
@@ -176,9 +176,9 @@ void setupAirportString() {
       strcat_P(airportString, airports[i]);
       strcat(airportString, ",");   // Separate stations
       sindex[sidxi++] = i;          // sequential index to LEDS without NULL stations
-      mtrsf[i].mtrstat = 0;
+      mtrsf[i].mtrstat = UNKWN;
     } else {                        // Added to report null stations V.W>
-      mtrsf[i].mtrstat = 99;        //  Default meteorology status 99 is for NULL locations a tag to skip progressing in stations html page
+      mtrsf[i].mtrstat = NOTUSED;   //  Default meteorology status 99 is for NULL locations a tag to skip progressing in stations html page
     }
   }
   Serial.print(F("AirportString = \n{")); Serial.print(airportString); Serial.println("}");
