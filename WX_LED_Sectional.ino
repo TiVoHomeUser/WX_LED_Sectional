@@ -2,8 +2,8 @@
 #define copyright "&#169; Jan 2021 VictorWheeler myapps@vicw.net use, modify and distribute without restrictions"
 #define compiledate __DATE__
 /*
- *  Based from https://led-sectional.kyleharmon.com
- *  https://github.com/WKHarmon/led-sectional
+ * 	https://github.com/TiVoHomeUser/WX_LED_Sectional
+ * 	inspired from https://led-sectional.kyleharmon.com  https://github.com/WKHarmon/led-sectional
  *
  */
 /*
@@ -18,13 +18,10 @@
  * 		 FastLED
  * 		 SPI
  *
- * 		 I added EEPROM for debugging
- *
  */
 #include "Arduino.h"
 
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
@@ -37,7 +34,6 @@ const char* hostname = MYHOSTNAME;
 
 ESP8266WebServer server(80);
 
-//const int led = 13;
 #define NO_EVENT    0
 #define MY_ID       1
 #define MY_TEST     2
@@ -46,7 +42,7 @@ byte my_Event = MY_TEST;
 const unsigned int loop_interval = WX_REFRESH_INTERVAL * 60;    // How often to run WX update converted in seconds
 unsigned int loop_time = loop_interval;                         // Force WX update first loop
 
-
+// Not really 'c' header files break up this .ino file into smaller sections still accessible by the Arduino IDE
 #include "utilities.h"
 #include "LEDString.h"
 #include "notFoundPage.h"
@@ -81,14 +77,14 @@ void loop(void) {
   server.handleClient();
   MDNS.update();
 
-  if ( timeElapsed() ) {                  // Do every second
+  if ( timeElapsed() ) {                  	// Do every second
      switch(my_Event){
-       case MY_ID:{
+       case MY_ID:{							// LED ID call to flash LED on or off map if from console
              idLED();
        }
        break;
 
-       case MY_TEST:{
+       case MY_TEST:{						// Cycle colors all LEDs
            // To prevent Software WD timeout test is called from loop 5 times
            if(testTime <= loop_time ){
              test();
@@ -99,8 +95,6 @@ void loop(void) {
 
        case MY_WXUPDATE:{
     	   server.close();                     // Stop clients from locking up the 4 available connections
-Serial.print(uptime());
-showFree(true);
            loop_time = loopLEDSectional();     // Return allows loop time to be adjusted for WX GET failures
            server.begin();                     // Restart Service
            testTime = loop_time;               // When loop_time overflows the next test may be delayed

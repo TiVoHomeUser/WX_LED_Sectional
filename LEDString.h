@@ -115,7 +115,7 @@ void slider(){
 /*
  *
  *                                                      Slider Page
- *                            Called by a HTML page get for program to procress the slider values
+ *                            Called by a HTML page get for program to progress the slider values
  *                            uses goback to return to the calling page
  *
  *
@@ -131,7 +131,7 @@ void slider_page(){
     lightOffset = svalue;   // Slide value -128 ... 128
   }
   //const static char goBack[] PROGMEM = "<!DOCTYPE html> <script language=\"JavaScript\" type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\",10); </script>";
-  server.send(200, "text/html", goBack);    // goBack string stored in PROGMEM seclared in WX_Sectional.h A it is used in 2 functions iDLED and Slider_page
+  server.send(200, "text/html", goBack);    // goBack string stored in PROGMEM declared in WX_Sectional.h A it is used in 2 functions iDLED and Slider_page
   server.client().stop();
 }
 
@@ -250,7 +250,7 @@ Serial.println(F("Test Done")); Serial.flush();
 /*
  *                                                CRGBtoHex
  *                    Convert from CRGB to a hex string 
- *                    sutibale for HTML Java script color attribute
+ *                    Suitable for HTML Java script color attribute
  *                    
  *                    Function created because I could not find one in the CRGB class in any case the return is formatted 
  *                    with '#' and ready to insert in a color attribute in the HTML page
@@ -258,6 +258,7 @@ Serial.println(F("Test Done")); Serial.flush();
  */
 static char hexval[8];
 char* CRGBtoHex(CRGB c){
+  // Removed calls to sprintf they were causing memory fragmentation
   //sprintf(hexval, "#%02X%02X%02X",c.r,c.g,c.b);
   //Serial.print("\nTo Hex  ");
   //Serial.print(hexval);
@@ -272,27 +273,26 @@ char* CRGBtoHex(CRGB c){
 
 /*
                                   doLighting()
-              Procress Lighting flash the LED about once a second (every loop)
+              Process Lighting flash the LED(s) about once a second (every loop)
               Moved outside of LEDSectional allowing increase of the LED lighting flash rate without flooding the WX server.
 
 
 */
 void doLighting() {
+  // TODO Using vector may be causing memory fragmentation need to investigate
   if (DO_LIGHTNING && lightningLeds.size() > 0) {
     std::vector<CRGB> lightning(lightningLeds.size());
     for (unsigned short int i = 0; i < lightningLeds.size(); ++i) {
       unsigned short int currentLed = lightningLeds[i];
-      lightning[i] = leds[currentLed]; // temporarily store original color
-      //leds[currentLed] = CRGB::Black; // set to Black before wihite better enhancement when LED is Yellow (high wind gusts)
-      //FastLED.show();
-      leds[currentLed] = CRGB::White; // set to white briefly
+      lightning[i] = leds[currentLed]; 	// temporarily store original color
+      leds[currentLed] = CRGB::White; 	// set to white briefly
     }
-    delay(25); // extra delay seems necessary with light sensor
+    delay(25); my_yield(); 				// extra delay seems necessary with light sensor
     FastLED.show();
-    delay(75);
+    delay(75); my_yield();
     for (unsigned short int i = 0; i < lightningLeds.size(); ++i) {
       unsigned short int currentLed = lightningLeds[i];
-      leds[currentLed] = lightning[i]; // restore original color
+      leds[currentLed] = lightning[i]; 	// restore original color
     }
     FastLED.show();
   }
