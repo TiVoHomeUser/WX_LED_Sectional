@@ -124,14 +124,10 @@ boolean cendsWith(const char* str1 , const char* str2){
     retval = false;
   } else {
     while(i <= len2 && retval == true){
-    	// TODO Fix this operation on i may be undefined warning
         if(str1[len1-i] != str2[len2-i]) retval = false;
         i++;
     }
   }
-  // if(retval){
-  //    Serial.print("endsWith("); Serial.print(str1); Serial.print(", "); Serial.print(str2); Serial.print(")"); Serial.println(" TRUE");
-  // }
   return retval;
 }
 
@@ -203,7 +199,7 @@ static int m_overflow;
     <title>WX_Sectional</title>\n";
 
     const char htmlReloadStr[] PROGMEM =
-    "<script type=\"text/javascript\">setTimeout(\"location.reload()\",60000);</script>\n"; //300000);</script>\n";
+    "<script type=\"text/javascript\">setTimeout(\"location.reload()\",300000);</script>\n";
 
 
     const char erralrt[] PROGMEM = "\t\t\t\t******* ERROR ERROR ERROR *******";    // used 4 times in stationPage
