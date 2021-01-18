@@ -4,6 +4,16 @@
 #define WX_DEBUG true //false            // Extra output to Serial.print port
 #define DEBUG true                       // Debug for memory tracing
 
+#if AUTOCONNECT
+#include <WiFiManager.h>
+#else
+#include <ESP8266WiFi.h>
+#endif
+
+#include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
+
+
 #define WXSERVER "www.aviationweather.gov"
 #define BASE_URI "/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
 #define my_yield() {ESP.wdtFeed(); yield();}     // reported problems with yield() not always reseting the software watchdog timer
@@ -19,17 +29,17 @@ int* airportIndex;                      // Last location in airports[] for each 
 static unsigned int rtmaxl = 0;              // Study to find raw text max length
 static unsigned int total_C_StringLen = 0;   // Study to find total length of raw text strings
 static const unsigned int RTMAXLN = 200;      // max size for Raw Text message
-  // 1 VFR, 2 MVFR, 3 LIFR, 4 IFR 0 unknown  maybe use leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
-  // TODO ********** NOTE: AIM defines 1 LIFR, 2 IFR, 3 MVFR, 4 VFR also can add WIND CIG FG Example "IFR FG" "LIFR CIG" "VFR WIND" *******
-#define VFR 1
-#define MVFR 2
-#define LIFR 3
-#define IFR 4
+  // leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
+  // AIM defines 1 LIFR, 2 IFR, 3 MVFR, 4 VFR also can add WIND CIG FG Example "IFR FG" "LIFR CIG" "VFR WIND"
 #define UNKWN 0
+#define LIFR 1
+#define IFR 2
+#define MVFR 3
+#define VFR 4
 #define NOTUSED 99
 
 typedef struct mtrs {
-  byte mtrstat;         // 1 VFR, 2 MVFR, 3 LIFR, 4 IFR 0 unknown 99 NULL  maybe use leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
+  byte mtrstat;         // 1 LIFR, 2 IFR, 3 MVFR, 4 VFR, 0 unknown, 99 NULL  leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
   byte mtrspeed;        // wind in knots
   byte mtrgusts;        // Used for html button display quicker to check by led number instead of comparing an entire vector entry's for every led
   boolean mtrlighting;  // Used for html button display quicker to check by led number instead of comparing an entire vector entry's for every led

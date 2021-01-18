@@ -29,22 +29,23 @@ void doColor(char* identifier, unsigned short int led, int wind, int gusts, char
     mtrsf[led].mtrlighting = true;         // For Button to display lighting
   }
 
-  // 1 VFR, 2 MVFR, 3 LIFR, 4 IFR 0 unknown  maybe use leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
-  // TODO ********** NOTE: AIM defines 1 LIFR, 2 IFR, 3 MVFR, 4 VFR also can add WIND CIG FG Example "IFR FG" "LIFR CIG" "VFR WIND" *******
+  // leds[] color Green = VFR, Blue = MVFR, Magenta = LIFR, Red = IFR, Yellow = VFR+Wind, Black = unknown
+  // 1 LIFR, 2 IFR, 3 MVFR, 4 VFR also can add WIND CIG FG Example "IFR FG" "LIFR CIG" "VFR WIND" *******
+
   if (strcmp(condition, "LIFR") == 0) { // || identifier == "LIFR") {
     leds[led] = CRGB::Magenta;
-    mtrsf[led].mtrstat = 3;
+    mtrsf[led].mtrstat = LIFR;
   }
   else if (strcmp(condition, "IFR") == 0) {
     leds[led] = CRGB::Red;
-    mtrsf[led].mtrstat = 4;
+    mtrsf[led].mtrstat = IFR;
   }
   else if (strcmp(condition, "MVFR") == 0) {
     leds[led] = CRGB::Blue;
-    mtrsf[led].mtrstat = 2;
+    mtrsf[led].mtrstat = MVFR;
   }
   else if (strcmp(condition, "VFR") == 0) {
-    mtrsf[led].mtrstat = 1;
+    mtrsf[led].mtrstat = VFR;
     if ((wind > WIND_THRESHOLD || gusts > WIND_THRESHOLD) && DO_WINDS) {
       leds[led] = CRGB::Yellow;
     } else {
@@ -52,7 +53,7 @@ void doColor(char* identifier, unsigned short int led, int wind, int gusts, char
     }
   } else {
     leds[led] = CRGB::Black;
-    mtrsf[led].mtrstat = 0;   // 99 for airports defined as NULL 0 will still display for un-reporting stations
+    mtrsf[led].mtrstat = UNKWN;   // 99 for airports defined as NULL 0 will still display for un-reporting stations
   }
   mtrsf[led].mtrspeed = wind;
   mtrsf[led].mtrgusts = gusts;

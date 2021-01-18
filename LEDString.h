@@ -200,38 +200,38 @@ void test(void){
     CRGB testColor;                   // Instead of doing all tests in same loop cycle for each color
     switch(testcycle){
         case 5:{
-Serial.print("Hello from test ");;
-Serial.print(" 5 "); Serial.flush();
+          Serial.print(F("Hello from test "));
+		  Serial.print(F(" 5 ")); Serial.flush();
           testColor = CRGB::Red;
           testcycle--;
         }
         break;
         case 4:{
           testColor = CRGB::Blue;
-Serial.print(" 4 "); Serial.flush();
+          Serial.print(F(" 4 ")); Serial.flush();
           testcycle--;
         }
         break;
         case 3:{
           testColor = CRGB::Green;
-Serial.print(" 3 "); Serial.flush();
+          Serial.print(F(" 3 ")); Serial.flush();
           testcycle--;
         }
         break;
         case 2:{
           testColor = CRGB::White;
-Serial.print(" 2 "); Serial.flush();
+          Serial.print(F(" 2 ")); Serial.flush();
 
         	testcycle--;
         }
         break;
         case 1:{
           testColor = CRGB::Black;    //CHSV(0,0,0);
-Serial.print(" 1 ");
+          Serial.print(F(" 1 "));
           testcycle = 5;              // ready for next run
           my_Event = NO_EVENT;
           loop_time = loop_interval - 5;    // force update shortly after test
-Serial.println(F("Test Done")); Serial.flush();
+          Serial.println(F("Test Done")); Serial.flush();
         }
         break;
         default:

@@ -7,14 +7,10 @@ user_settings.ino
 #ifndef USER_INFO_INO
 #define USER_INFO_INO 1
 
-#include "credentials.h"  // Contains my WiFi credentials STASSID and STAPSK I don't want to be public
-                          // either edit file with you're info or comment out and hardcode them below
+#define AUTOCONNECT true          // Use WiFi Connection manager with fallback web configuration portal instead of hard-coded SSID and Password
+                                  // Consumes extra 2 to 3K of valuable ram
 
-#ifndef STASSID
-#define STASSID "MySSID"                // WiFi network name
-#define STAPSK  "MySSIDPassword"        // and Passkey
-#define MYHOSTNAME "Wx_Sectional"       // Name for this client
-#endif
+#include "credentials.h"          // Contains Hostname and WiFi credentials STASSID and STAPSK I don't want to be public
 
 #define NUM_AIRPORTS 100                // This is really the number of LEDs not Stations
 // FYI using test array 32 = 24, 44 = 32, 60 = 40, 73 = 48, 75 = 50, 86 = 56, 100 = 64,  132 = 96, 136 = 100, 140 = 104
