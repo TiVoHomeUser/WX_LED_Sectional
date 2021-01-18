@@ -4,6 +4,19 @@
 #define WX_DEBUG true //false            // Extra output to Serial.print port
 #define DEBUG true                       // Debug for memory tracing
 
+#define AUTOCONNECT true				 // Use WiFi Connection manager with fallback web configuration portal instead of hard-coded SSID and Password
+										 // Consumes extra 2 - 3K of valuable ram
+
+#if AUTOCONNECT
+#include <WiFiManager.h>
+#else
+#include <ESP8266WiFi.h>
+#endif
+
+#include <ESP8266mDNS.h>
+#include <ESP8266WebServer.h>
+
+
 #define WXSERVER "www.aviationweather.gov"
 #define BASE_URI "/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
 #define my_yield() {ESP.wdtFeed(); yield();}     // reported problems with yield() not always reseting the software watchdog timer

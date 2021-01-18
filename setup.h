@@ -4,7 +4,15 @@
 
 void setupConnection(void){
   WiFi.mode(WIFI_STA);
+#if AUTOCONNECT  // AutoConnect obtain credentials from web page
+  WiFiManager wm;
+  //wm.autoConnect(); 								// auto generated AP name from chipid
+  wm.autoConnect(MYHOSTNAME"_AP"); 				// anonymous ap
+  // wm.autoConnect("AutoConnectAP","password");	// password protected AP
+#else  			// Hard-coded connection
   WiFi.begin(ssid, password);
+#endif
+
   Serial.println("");
 
 
@@ -14,9 +22,9 @@ void setupConnection(void){
     Serial.print(".");
   }
   Serial.println("");
-  Serial.print("Connected to ");
+  Serial.print(F("Connected to "));
   Serial.println(ssid);
-  Serial.print("IP address: ");
+  Serial.print(F("IP address: "));
   Serial.println(WiFi.localIP());
 }
 

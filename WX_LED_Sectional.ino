@@ -21,10 +21,6 @@
  */
 #include "Arduino.h"
 
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
-
 #include "user_settings.h"
 #include "WX_LED_Sectional.h"
 
