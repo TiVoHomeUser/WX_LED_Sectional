@@ -4,9 +4,6 @@
 #define WX_DEBUG true //false            // Extra output to Serial.print port
 #define DEBUG true                       // Debug for memory tracing
 
-#define AUTOCONNECT true				 // Use WiFi Connection manager with fallback web configuration portal instead of hard-coded SSID and Password
-										 // Consumes extra 2 - 3K of valuable ram
-
 #if AUTOCONNECT
 #include <WiFiManager.h>
 #else

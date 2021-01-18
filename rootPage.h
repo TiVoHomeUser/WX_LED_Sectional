@@ -35,10 +35,12 @@ void rootPage(){
   server.sendContent(F("</head><body><h1 align=\"center\" style=\"color:lighttgray;margin:20px;\">\n" )); //<h6 \"color: #DFF2FB;\">\n")); // h6 {color: #DFF2FB;}\n"
   server.sendContent(hostname); server.sendContent(F(" on ")); server.sendContent(WiFi.SSID()); server.sendContent(F("</h1>"));
 
-  server.sendContent("<h2 align=\"center\" style=\"color:lighttgray;margin:20px;\">\n"); server.sendContent(b2Scs(cycleCount)); //String(cycleCount).c_str());
-  server.sendContent(" / "); server.sendContent(b2Scs(cycleErrCount)); //String(cycleErrCount).c_str());
-  server.sendContent(" Light = "); server.sendContent(b2Scs(brightness)); //String(brightness).c_str());
-  server.sendContent(" Adjust = "); server.sendContent(b2Scs(lightOffset)); //String(lightOffset).c_str());
+  server.sendContent(F("<h2 align=\"center\" style=\"color:lighttgray;margin:20px;\">\n")); server.sendContent(b2Scs(cycleCount)); //String(cycleCount).c_str());
+  server.sendContent(F(" / ")); server.sendContent(b2Scs(cycleErrCount)); //String(cycleErrCount).c_str());
+  server.sendContent(F(" Light = ")); server.sendContent(b2Scs(brightness)); //String(brightness).c_str());
+  server.sendContent(F(" Adjust = ")); server.sendContent(b2Scs(lightOffset)); //String(lightOffset).c_str());
+  server.sendContent(F(" Free = ")); server.sendContent(b2UScs(ESP.getMaxFreeBlockSize()));
+  
   server.sendContent(F("</h2>\n<h6 align=\"center\" style=\"color.blue;margin:15px;\">"));
   server.sendContent(F( copyright)); server.sendContent(F(" ")); server.sendContent(F(compiledate));
   server.sendContent(F("</h6>\n"

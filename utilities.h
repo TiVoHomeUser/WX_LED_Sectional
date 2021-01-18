@@ -73,6 +73,17 @@ char* b2Scs(signed short b){
 
 /*
  *
+ *                  Convert Unsigned short to Signed c-string
+ *            minimum value of 0 and a maximum value of 65,535
+ *
+ */
+char* b2UScs(unsigned short b){
+  itoa(b, buf,10);
+  return buf;
+}
+
+/*
+ *
  *                  Convert a byte to c-string (char[]) handy for strcat function
  *                  return:
  *                    null terminated c-string  "0" .. "255"
