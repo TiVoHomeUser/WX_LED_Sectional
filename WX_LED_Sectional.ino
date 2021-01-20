@@ -16,8 +16,10 @@
  * 		 ESP8266WebServer
  * 		 ESP8266WiFi
  * 		 FastLED
- * 		 SPI
- *
+ *      
+ *   Optional 
+ *    WiFiManager by tzapu
+ *    
  */
 #include "Arduino.h"
 
