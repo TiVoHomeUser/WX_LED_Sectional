@@ -16,10 +16,10 @@
  * 		 ESP8266WebServer
  * 		 ESP8266WiFi
  * 		 FastLED
- *      
- *   Optional 
+ *
+ *   Optional
  *    WiFiManager by tzapu
- *    
+ *
  */
 #include "Arduino.h"
 
@@ -54,7 +54,7 @@ unsigned int loop_time = loop_interval;                         // Force WX upda
 
 void setup(void) {
 	delay(100);			// some boards are unstable
-	setupBiLED();
+	setupBuiltInLED();
 	setupSerial();
 	setupBigBlock();
 	setupAirportString();

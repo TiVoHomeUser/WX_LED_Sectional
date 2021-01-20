@@ -6,8 +6,8 @@ void setupConnection(void){
   WiFi.mode(WIFI_STA);
 #if AUTOCONNECT  // AutoConnect obtain credentials from web page
   WiFiManager wm;
-  //wm.autoConnect(); 								// auto generated AP name from chipid
-  wm.autoConnect(MYHOSTNAME"_AP"); 				// anonymous ap
+  wm.autoConnect(MYHOSTNAME"_AP"); 								// auto generated AP name from chipid
+  // wm.autoConnect("AutoConnectAP"); 				// anonymous ap
   // wm.autoConnect("AutoConnectAP","password");	// password protected AP
 #else  			// Hard-coded connection
   WiFi.begin(ssid, password);
@@ -35,11 +35,12 @@ void setupmDNS(void){
   }
 }
 
-void setupBiLED(void){
+void setupBuiltInLED(void){
 	  pinMode(LED_BUILTIN, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
-	  digitalWrite(LED_BUILTIN, 0);             // Off
+	  digitalWrite(LED_BUILTIN, HIGH);  // Off
 
 }
+
 void setupSerial(void){
 	  delay(100);
 	  Serial.begin(74880); //115200);
@@ -130,18 +131,17 @@ char* airportString = NULL;             // working c-string airports array witho
 // delete this now temporary working string and work only from ee-ROM memory this saves #airports * 5 of valuable ram space (500 bytes for 100 stations)
 // + a few bytes for the pointers
 
-//// const static int numOfAirportsGet  = 25; // NUM_AIRPORTS; // Number of airports to download per loop  MOVED to .h
-//int actualNumAirports  = NUM_AIRPORTS;  // Total without NULL locations
-//int airportStringsSize = 0;             // total number of char's needed
-//int noOfAirportStrings = 1;             // if dividing up for download how many substrings needed / used
-//char** airportStrings;                  // pointers to substrings
-//int* airportIndex;                      // Last location in airports[] for each airport substring limit station's
-//// string compare loop I.E. from airportindex[0] to airportindex[1]
 /*
  *
- *              setupAirportString()
+ *						              setupAirportString()
  *
  *
+ * const static int numOfAirportsGet  = 25; // NUM_AIRPORTS; // Number of airports to download per loop  MOVED to .h
+ * int actualNumAirports  = NUM_AIRPORTS;   // Total without NULL locations
+ * int airportStringsSize = 0;              // total number of char's needed
+ * int noOfAirportStrings = 1;              // if dividing up for download how many substrings needed / used
+ * char** airportStrings;                   // pointers to substrings
+ * int* airportIndex;                       // Last location in airports[] for each airport substring limit station's
  *
  */
 void setupAirportString() {
