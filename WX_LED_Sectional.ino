@@ -6,19 +6,24 @@
  * 	Original inspired from https://led-sectional.kyleharmon.com  https://github.com/WKHarmon/led-sectional
  *
  */
+ 
 /*
  * 		NOTE:
  * 		Due to memory (ram) fragmentation and available amount *DO NOT* use Strings. Anything that will not change put in Flash Prom see F() macro
  * 		and PROGMEM. Remember there is a Maximum of 4MB of SRAM and the WX Download needs 30,000 continuous bytes.
  *
  * 		Libraries needed are
- * 		 ESP8266mDNS
+ * 		 ESP8266mDNS (part of the esp8266 core for Arduino environment)
  * 		 ESP8266WebServer
  * 		 ESP8266WiFi
- * 		 FastLED
+ * 		 FastLED by Daniel Garica
  *
  *   Optional
- *    WiFiManager by tzapu
+ *   autoconnect
+ *    WiFiManager by tzapu,tablatronix
+ *    
+ *   TSL2561 light sensor 
+ *    Adafruit TSL2561 by Adafruit 
  *
  */
 #include "Arduino.h"

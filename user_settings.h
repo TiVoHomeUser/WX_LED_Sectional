@@ -23,6 +23,10 @@ const static int numOfAirportsGet = 32; //27; //30; //32; //NUM_AIRPORTS; // Num
 
 #define USE_LIGHT_SENSOR true //false   // Set USE_LIGHT_SENSOR to true if you're using any light sensor.
 
+// Set LIGHT_SENSOR_TSL2561 to true if you're using a TSL2561 digital light sensor.
+// Kits shipped after March 1, 2019 have a digital light sensor. Setting this to false assumes an analog light sensor.
+#define LIGHT_SENSOR_TSL2561 true
+
 const static char PROGMEM airports[][5] = {
   "KBEH", // 1
   "KLWA", // 2

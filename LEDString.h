@@ -3,7 +3,6 @@
 
 #include <FastLED.h>
 
-
 /* This section only applies if you have an ambient light sensor connected */
 #if USE_LIGHT_SENSOR
 /* The sketch will automatically scale the light between MIN_BRIGHTNESS and
@@ -22,9 +21,6 @@ Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 1234
 
 #endif  //  USE_LIGHT_SENSOR
 
-//// Set LIGHT_SENSOR_TSL2561 to true if you're using a TSL2561 digital light sensor.
-//// Kits shipped after March 1, 2019 have a digital light sensor. Setting this to false assumes an analog light sensor.
-#define LIGHT_SENSOR_TSL2561 false
 
 //#define DATA_PIN    5 //6 //14 // Kits shipped after March 1, 2019 should use 14. Earlier kits us 5.    NodeMCU ESP 12-E modules
 #define DATA_PIN    14 // Kits shipped after March 1, 2019 should use 14. Earlier kits us 5.            LILON WEMOS D1 mini Lite
