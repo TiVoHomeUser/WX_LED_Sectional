@@ -65,24 +65,30 @@ void adjustBrightness() {
     //signed short brightness; // to work with '-' numbers
     float reading;
 
-    #if USE_LIGHT_SENSOR
-      #if LIGHT_SENSOR_TSL2561
-        sensors_event_t event;
-        tsl.getEvent(&event);
-        reading = event.light;
-      #else
+    #if LIGHT_SENSOR_TSL2561
+      sensors_event_t event;
+      if(tsl.getEvent(&event)) {
+    	  reading = event.light / 64;		// sensor reading is between 0 and 65535 lux READING NO SENSOR = 65536.00
+    	  //reading = reading / 64;			// adjust values 0 to 1024 to match analog sensor
+      } else {
+    	  reading = 512;					// Fake-it for defective or missing sensor
+      }
+// TODO remove after debug
+Serial.print("READING TSL2561 = "); Serial.println(reading);
+    #else
+      #if USE_LIGHT_SENSOR
         reading = analogRead(LIGHTSENSORPIN); // dark = 1024 max light = 0
                                               // actual working values using iPhone light
                                               // dark = 1024
                                               // bright = 60
                                               // With No sensor reading = 8 sometimes 7 (using node MCU ESP12E)
-      #endif // TSL2561
-    #else // 
-        reading = 512;  // Half way for no sensor so slider can still adjust LEDs
+      #else
+        reading = 512;  // Half way for no sensor
+      #endif
     #endif
 
     brightness =  256 - (reading / 4);    // the sensor values are Max light = 0 (60 for iPhone flashlight) ... Max dark = 1024
-                                            // converts values to 256 (212) ... 0 for the LED string
+                                          // converts values to 256 (212) ... 0 for the LED string
     // sanity check
     brightness = brightness + lightOffset;
     if(brightness < 20) brightness = 20;
