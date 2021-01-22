@@ -3,10 +3,6 @@
 
 #include <FastLED.h>
 
-//// Set LIGHT_SENSOR_TSL2561 to true if you're using a TSL2561 digital light sensor.
-//// Kits shipped after March 1, 2019 have a digital light sensor. Setting this to false assumes an analog light sensor.
-#define LIGHT_SENSOR_TSL2561 false
-
 /* This section only applies if you have an ambient light sensor connected */
 #if USE_LIGHT_SENSOR
 /* The sketch will automatically scale the light between MIN_BRIGHTNESS and
