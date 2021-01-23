@@ -29,8 +29,6 @@ Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 1234
 #define LED_TYPE    WS2811
 #define COLOR_ORDER RGB
 
-#define LIGHTSENSORPIN A0 // A0 is the only valid pin for an analog light sensor
-
 // Define the array of leds
 static CRGB leds[NUM_AIRPORTS];
 
@@ -59,40 +57,57 @@ void setupLEDString(void){
 	#endif
 }
 
+/*
+ * 				AdjustBrightness()
+ * 		Working with two sensors the Digital TSL2561 or Analog
+ * 		I tested with an Analog sensor from the package of 10 Gowoops ZZ20161810
+ *
+ */
 static signed short lightOffset = 0; // can be changed using slider on station (button) page
-static signed short brightness;
+static signed short brightness;		 // needs to work with '-' numbers
 void adjustBrightness() {
-    //signed short brightness; // to work with '-' numbers
     float reading;
 
-    #if LIGHT_SENSOR_TSL2561
-      sensors_event_t event;
-      if(tsl.getEvent(&event)) {
-    	  reading = event.light / 64;		// sensor reading is between 0 and 65535 lux READING NO SENSOR = 65536.00
-    	  //reading = reading / 64;			// adjust values 0 to 1024 to match analog sensor
-      } else {
-    	  reading = 512;					// Fake-it for defective or missing sensor
-      }
-// TODO remove after debug
-Serial.print("READING TSL2561 = "); Serial.println(reading);
-    #else
-      #if USE_LIGHT_SENSOR
-        reading = analogRead(LIGHTSENSORPIN); // dark = 1024 max light = 0
-                                              // actual working values using iPhone light
-                                              // dark = 1024
-                                              // bright = 60
-                                              // With No sensor reading = 8 sometimes 7 (using node MCU ESP12E)
-      #else
+	#if USE_LIGHT_SENSOR
+		#if LIGHT_SENSOR_TSL2561
+      	  sensors_event_t event;
+      	  if(tsl.getEvent(&event)) {
+      		  reading = (event.light);		// sensor reading expected between 0 and 65535 lux READING NO SENSOR = 65536.00
+      		  	  	  	  	  	  	  	  	// Using iPhone light 	19600
+      		  	  	  	  	  	  	  	  	// Bright Sun light 	1260
+      		  	  	  	  	  	  	  	  	// Dark					0
+      		  	  	  	  	  	  	  	  	// Room					550
+
+      		  //reading = reading / 64;		// adjust values 0 to 1024 to match analog sensor
+      	  } else {
+      		  reading = 512;				// Fake-it for defective or missing sensor
+      	  }
+   	   	#else	// Must be using the analog sensor
+       	   reading = 1024 - analogRead(LIGHTSENSORPIN);	// Invert sensor values
+       	   	   	   	   	   	   	   	   	   	   	   	    // sensor values:
+       	   	   	   	   	   	   	   	   	   	   	   	    // - dark = 1024 max light = 0
+                                              			// - actual working values using iPhone light
+                                              			// - dark = 1024
+                                             	 		// - bright = 60
+                                             	 		// - With No sensor reading = 8 sometimes 7 (using node MCU ESP12E)
+       	   	   	   	   	   	   	   	   	   	   	   	    // light string low (dim) = 0 high = 255
+		#endif	// TSL2561
+    #else	// Not using any light sensor fake it so the slider adjustment still works
         reading = 512;  // Half way for no sensor
-      #endif
     #endif
 
-    brightness =  256 - (reading / 4);    // the sensor values are Max light = 0 (60 for iPhone flashlight) ... Max dark = 1024
-                                          // converts values to 256 (212) ... 0 for the LED string
+    //brightness =  256 - (reading / 4);    // the sensor values are Max light = 0 (60 for iPhone flashlight) ... Max dark = 1024
+    brightness =  (reading / 4);    		// the sensor values are Max light = 0 (60 for iPhone flashlight) ... Max dark = 1024
+                                          	// converts values to 256 (212) ... 0 for the LED string
     // sanity check
     brightness = brightness + lightOffset;
     if(brightness < 20) brightness = 20;
     if(brightness > 255) brightness = 255;
+//Serial.print(" = LSensor = "); Serial.println(brightness);
+// 			low    high room
+// DLS 		20 ... 255, 105
+// ALS 		20 ... 234, 162
+
     FastLED.setBrightness(brightness);
     FastLED.show();
 }  // adjustBrightness()
@@ -129,7 +144,7 @@ void slider_page(){
     Serial.print(F("Found value for 'a' "));
     svalue = server.arg("a").toInt();
     Serial.println(svalue);
-    // FastLED.setBrightness(svalue);   // scale  a 0-255 value for how much to scale all leds before writing them out
+    // FastLED.setBrightness(svalue);   // scale  a 0-255 value for how much to scale all LEDs before writing them out
     lightOffset = svalue;   // Slide value -128 ... 128
   }
   //const static char goBack[] PROGMEM = "<!DOCTYPE html> <script language=\"JavaScript\" type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\",10); </script>";

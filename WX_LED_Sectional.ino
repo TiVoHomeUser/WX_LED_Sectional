@@ -13,17 +13,17 @@
  * 		and PROGMEM. Remember there is a Maximum of 4MB of SRAM and the WX Download needs 30,000 continuous bytes.
  *
  * 		Libraries needed are
- * 		 ESP8266mDNS (part of the esp8266 core for Arduino environment)
- * 		 ESP8266WebServer
- * 		 ESP8266WiFi
- * 		 FastLED by Daniel Garica
+ * 		 ESP8266mDNS 		(part of the esp8266 core for Arduino environment)
+ * 		 ESP8266WebServer 	(bundled with the version of Arduino IDE)
+ * 		 ESP8266WiFi		(Board Manager. Type "ESP8266" in the text box to search and install the ESP8266 software for Arduino IDE.)
+ * 		  - FastLED by Daniel Garica
  *
- *   Optional
- *   autoconnect
- *    WiFiManager by tzapu,tablatronix
+ *      Optional:
+ *    	 for autoconnect
+ *    	  - WiFiManager by tzapu,tablatronix
  *    
- *   TSL2561 light sensor 
- *    Adafruit TSL2561 by Adafruit 
+ *   	 for TSL2561 light sensor
+ *    	  - Adafruit TSL2561 by Adafruit
  *
  */
 #include "Arduino.h"
