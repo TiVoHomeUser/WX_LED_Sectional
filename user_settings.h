@@ -21,7 +21,7 @@ const static int numOfAirportsGet = 32; //27; //30; //32; //NUM_AIRPORTS; // Num
 #define DO_WINDS true                   // color LEDs for high winds
 #define DO_LIGHTNING true               // Lightning uses more power, but is cool.
 
-#define USE_LIGHT_SENSOR true           // Set USE_LIGHT_SENSOR to true if you're using any light sensor.
+#define USE_LIGHT_SENSOR true			// Set USE_LIGHT_SENSOR to true if you're using any light sensor.
 
 // Set LIGHT_SENSOR_TSL2561 to true if you're using a TSL2561 digital light sensor.
 // Kits shipped after March 1, 2019 have a digital light sensor. Setting this to false assumes an analog light sensor.
@@ -128,9 +128,8 @@ const static char PROGMEM airports[][5] = {
   "KGOV", // 98
   "NULL", // 99
   "KGLR" // 100
-/*  
 // Add more For testing
- ,"KORD",
+  ,"KORD",
   "KBHM",
   "KHSV",
   "KMGM",
@@ -232,7 +231,6 @@ const static char PROGMEM airports[][5] = {
   "KBIS", // 200
   "KFAR",
   "KMOT"  // 202
- */
 };
 
 
