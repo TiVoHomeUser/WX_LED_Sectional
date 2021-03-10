@@ -163,7 +163,7 @@ void showFree(boolean force) {
  *                                        Uptime()
  *                  Compute uptime return as a cstring days : hours : minutes : seconds
  *                  Note: Max Uptime counter is 49 days 17 hours 2 minutes and 47 Seconds
- *                  Update: 12/16 added 49 day overflow counter so should work for 999 days (Like that is going to happen)
+ *                  Update: 12/16 added 49 day overflow counter so should work for 999 * 49 days (Like that is going to happen)
  */
 static unsigned long m_secs, m_mins, m_lastvalue;
 static unsigned int m_hours, m_days;
@@ -171,10 +171,18 @@ static char m_uptimeCstr[] = "365:23:59:59"; // max value for millis() is 4,294,
 static int m_overflow;
  char* uptime(){
   if(m_lastvalue > millis()) m_overflow++;
-  m_secs=millis() /1000;
+  m_secs=millis() /1000;                    // Convert to seconds
+  m_secs = m_secs + (4294967 * m_overflow); // add 49 days 17 hours 2 minutes and 47 seconds for each overflow
+                                            // 47 seconds =         47 seconds
+                                            // 2  minutes =        120 seconds
+                                            // 17 hour    =      61200 seconds
+                                            // 49 days    =    4233600 seconds
+                                            // 49:17:2:47 =    4294967 seconds
+                                            // ulong max  = 4294967295 good for 999 49 day overflow counts
+
   m_mins =  m_secs / 60; m_hours = m_mins / 60; m_days = m_hours/24;
   m_secs -= m_mins * 60; m_mins -= m_hours * 60; m_hours -= m_days*24;
-  m_days =  m_days + (m_overflow * 49); // fix for overflow
+//  m_days =  m_days + (m_overflow * 49); // fix for overflow
   m_uptimeCstr[0] = '\0';
   strcat(m_uptimeCstr, b2cs(m_days));  strcat(m_uptimeCstr, ":");
   strcat(m_uptimeCstr, b2cs(m_hours)); strcat(m_uptimeCstr, ":");
@@ -183,6 +191,7 @@ static int m_overflow;
   m_lastvalue = millis(); // update value to check for overflow to allow for more than 49 days
   return m_uptimeCstr;
  }
+
 
 
   // Cycle built in LED to show we are alive
