@@ -2,10 +2,8 @@
 #define util_ino 1
 
 /*
- * 			Vic Utils
- */
-
-/*
+ * 														Vic Utils
+ *
  *                VicUtils © copyright 2020 Victor Wheeler myapps@vicw.net anyone is free to use just not restrict.
  *
  */
@@ -16,15 +14,22 @@
  *
  *
  */
-static unsigned long lastmills = 0;
 static const unsigned long secondIntervill = 1000;
 // const unsigned long minuteIntervill = secondIntervill * 60;
 // const unsigned long hourIntervill = minuteIntervill * 60;
 // const unsigned long dayIntervill = hourIntervill * 24;
 
-static unsigned long currentmills = secondIntervill;  // force 1 second timer to do it on first loop
+static unsigned long currentmills = secondIntervill;  	// force 1 second timer to do it on first loop
+static unsigned long lastmills = 0;
+static int m_overflow=0;								// Counter for the 49 day millis() overflow bug
+
 boolean timeElapsed() {
   currentmills = millis();
+  if(lastmills > currentmills){		// check for unsigned long overflow allows for more than 49 days up-time
+	  m_overflow++;
+	  lastmills = 0;				// start over loose any remainder from previous check
+  }
+
   if ((currentmills - lastmills) >= secondIntervill) {
     lastmills = currentmills;
     return true;
@@ -165,12 +170,11 @@ void showFree(boolean force) {
  *                  Note: Max Uptime counter is 49 days 17 hours 2 minutes and 47 Seconds
  *                  Update: 12/16 added 49 day overflow counter so should work for 999 * 49 days (Like that is going to happen)
  */
-static unsigned long m_secs, m_mins, m_lastvalue;
+static unsigned long m_secs, m_mins;
 static unsigned int m_hours, m_days;
 static char m_uptimeCstr[] = "365:23:59:59"; // max value for millis() is 4,294,967,295 or 49.71 days
-static int m_overflow;
  char* uptime(){
-  if(m_lastvalue > millis()) m_overflow++;
+  // moved to timeElapsed()  if(m_lastvalue > millis()) m_overflow++;
   m_secs=millis() /1000;                    // Convert to seconds
   m_secs = m_secs + (4294967 * m_overflow); // add 49 days 17 hours 2 minutes and 47 seconds for each overflow
                                             // 47 seconds =         47 seconds
@@ -182,16 +186,13 @@ static int m_overflow;
 
   m_mins =  m_secs / 60; m_hours = m_mins / 60; m_days = m_hours/24;
   m_secs -= m_mins * 60; m_mins -= m_hours * 60; m_hours -= m_days*24;
-//  m_days =  m_days + (m_overflow * 49); // fix for overflow
   m_uptimeCstr[0] = '\0';
   strcat(m_uptimeCstr, b2cs(m_days));  strcat(m_uptimeCstr, ":");
   strcat(m_uptimeCstr, b2cs(m_hours)); strcat(m_uptimeCstr, ":");
   strcat(m_uptimeCstr, b2cs(m_mins));  strcat(m_uptimeCstr, ":");
   strcat(m_uptimeCstr, b2cs(m_secs));  //strcat(m_uptimeCstr, ":");
-  m_lastvalue = millis(); // update value to check for overflow to allow for more than 49 days
   return m_uptimeCstr;
  }
-
 
 
   // Cycle built in LED to show we are alive
