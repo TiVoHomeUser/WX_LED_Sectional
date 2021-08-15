@@ -1,5 +1,6 @@
 #ifndef metars_ino
-#define metars_ino "Jan 2, 2021"
+#define metars_ino "Sept 14, 2021"
+// 2021/09/14 Fix for station's Button can display last metar condictions after a station goes off-line  V.W>
 
 void doColor(char* identifier, unsigned short int led, int wind, int gusts, char* condition, char* wxstring, const char* rawText){ //, boolean last) {
   showFree( false );
@@ -101,8 +102,11 @@ bool getMetars() {
   boolean maxexcd = false;  // For debugging c-string size
 
   for (int l = 0; l < NUM_AIRPORTS; l++) {
-    mtrsf[l].mtrlighting = false;
-    mtrsf[l].rawText = offLine; //  for the .html panel display Default message if station does not report
+	  if(mtrsf[l].mtrstat != NOTUSED) {
+		  mtrsf[l].mtrlighting = false;
+		  mtrsf[l].rawText = offLine; //  for the .html panel display Default message if station does not report
+		  mtrsf[l].mtrstat = UNKWN;	// Fix for station after it goes off-line
+	  }
   }
 
   lightningLeds.clear(); // clear out existing lightning LEDs since they're global

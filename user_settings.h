@@ -129,7 +129,7 @@ const static char PROGMEM airports[][5] = {
   "NULL", // 99
   "KGLR" // 100
 // Add more For testing
-  ,"KORD",
+/*  ,"KORD",
   "KBHM",
   "KHSV",
   "KMGM",
@@ -231,6 +231,7 @@ const static char PROGMEM airports[][5] = {
   "KBIS", // 200
   "KFAR",
   "KMOT"  // 202
+  */
 };
 
 
