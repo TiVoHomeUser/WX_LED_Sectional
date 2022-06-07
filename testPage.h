@@ -45,29 +45,40 @@ void testPage(void){
  *
  */
 void iDLED(void){
+//if(server.arg("wxid").toInt() == NULL) Serial.println("NULL");
+//TODO Check for valid integer invalid chars return int 0
   if(server.hasArg("wxid")){
+	unsigned short airportnumber = server.arg("wxid").toInt();
+	if(airportnumber < NUM_AIRPORTS) {
     Serial.print(F("Hello iDLED called LED "));
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
     server.send_P( 200, "text/html", htmlHeadStr);
     server.sendContent(F("<script type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\", 25000); </script>\n"   // 1000 = 1 Sec test takes about 9 seconds
                        "</head>\n"
                         "<body>"
-                        "<h2 align=\"center\" style=\"color:lighttgray;margin:20px;\">"));
+                        "<h2 align=\"center\" style=\"color:black;margin:20px;\">"));
     server.sendContent(hostname);
     server.sendContent(F("</h2>\n"
-                        "<h3 align=\"center\"> LED ID: "));
-    server.sendContent_P(airports[server.arg("wxid").toInt()]);
-    server.sendContent(F(" in progress... Please Wait</h3>"
+    					"<h3 align=\"center\" style=\"color:"));
+							server.sendContent(CRGBtoHex(leds[airportnumber]));
+    server.sendContent(F(";margin:5px;\">\n"
+    					"<br><br>"));
+    server.sendContent(mtrsf[airportnumber].rawText);	// Display raw data because tooltip sometimes doesn't work or is hard to use
+    server.sendContent(F("<br><br></h3>\n"
+    					"<h4 align=\"center\" style=\"color:lightgray;margin:10px;\">LED ID: "));
+    server.sendContent_P(airports[airportnumber]);
+    server.sendContent(F(" in progress... Please Wait</h4>"
                         "</body>"
                         "</html>"));
     server.client().stop();
-
     Serial.println(server.arg("wxid"));
     idLED(server.arg("wxid").toInt());
   } else {
     Serial.println(F("N/A"));
-  }
- }
+    handleNotFound(); // FWTGBITN
+  } // valid argument check
+ } // has argument
+}
 
 /*
  *                      Force a reboot by setting high error count

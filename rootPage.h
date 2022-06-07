@@ -56,7 +56,7 @@ void rootPage(){
                        server.sendContent("</h4><p>\n");
  server.sendContent(F( "<h5 align=\"center\"> "
                        "<a href=\"stationsL\">Stations: Desktop,</a>&nbsp;&nbsp;&nbsp;&nbsp;"
-                       "<a href=\"stationsW\"> Mobile Wide,</a></a>&nbsp;&nbsp;&nbsp;&nbsp;"
+                       "<a href=\"stationsW\"> Mobile Wide,</a>&nbsp;&nbsp;&nbsp;&nbsp;"
                        "<a href=\"stationsN\"> Mobile Narrow</a></h5>\n"
                        "<p></p><p style=\"padding-top:15px;text-align:center\">"
                        "<a href=\"test\"> Test</a></p>\n"));
