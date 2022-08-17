@@ -94,7 +94,7 @@ void adjustBrightness() {
 		#endif	// TSL2561
     #else	// Not using any light sensor fake it so the slider adjustment still works
         reading = 512;  // Half way for no sensor
-    #endif
+    #endif // USE_LIGHT_SENSOR
 
     //brightness =  256 - (reading / 4);    // the sensor values are Max light = 0 (60 for iPhone flashlight) ... Max dark = 1024
     brightness =  (reading / 4);    		// the sensor values are Max light = 0 (60 for iPhone flashlight) ... Max dark = 1024

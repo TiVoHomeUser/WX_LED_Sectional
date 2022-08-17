@@ -1,5 +1,5 @@
 
-#define copyright "&#169; Jan 2021 VictorWheeler myapps@vicw.net use, modify and distribute without restrictions"
+#define copyright "&#169; Aug 2022 VictorWheeler myapps@vicw.net use, modify and distribute without restrictions"
 #define compiledate __DATE__
 /*
  * 	https://github.com/TiVoHomeUser/WX_LED_Sectional

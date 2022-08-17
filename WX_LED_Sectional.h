@@ -1,8 +1,8 @@
 #ifndef WX_Led_Sectional_ino
 #define WX_Led_Sectional_ino "Jan 2, 2021"
 
-#define WX_DEBUG true //false            // Extra output to Serial.print port
-#define DEBUG true                       // Debug for memory tracing
+#define WX_DEBUG false            // Extra output to Serial.print port
+#define DEBUG    false            // Debug for memory tracing
 
 #if AUTOCONNECT
 #include <WiFiManager.h>

@@ -216,7 +216,7 @@ static char m_uptimeCstr[] = "365:23:59:59"; // max value for millis() is 4,294,
     const char htmlHeadStr[] PROGMEM =
     "<!DOCTYPE html> <html>\n\
     <head>\n\
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=1\">\n\
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=1\" charset=\"ASCII\">\n\
     <title>WX_Sectional</title>\n";
 
     const char htmlReloadStr[] PROGMEM =
