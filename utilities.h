@@ -207,6 +207,10 @@ static char m_uptimeCstr[] = "365:23:59:59"; // max value for millis() is 4,294,
       }
   }
 
+  void m_reset(){
+	  ESP.reset();      // Not sure which one to use reports that .restart() has problems
+	  ESP.restart();
+  }
 
   /*
     *

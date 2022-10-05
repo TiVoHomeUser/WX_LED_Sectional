@@ -1,29 +1,54 @@
 #ifndef setup_ino
 #define setup_ino Jan 1, 2021
 #include "utilities.h"
+#define PORTAL_TIMEOUT		 5			// Portal Timeout in minutes (how long to wait as configuration access point)
+
 
 void setupConnection(void){
   WiFi.mode(WIFI_STA);
+  int Portal_timeOut = (PORTAL_TIMEOUT * 60); // (minutes * seconds);
+
 #if AUTOCONNECT  // AutoConnect obtain credentials from web page
-  WiFiManager wm;
-  wm.autoConnect(MYHOSTNAME"_AP"); 								// auto generated AP name from chipid
-  // wm.autoConnect("AutoConnectAP"); 				// anonymous ap
-  // wm.autoConnect("AutoConnectAP","password");	// password protected AP
-#else  			// Hard-coded connection
+  if(WiFi.status() !=  WL_CONNECTED) {
+	  WiFiManager wm;
+	  wm.setConfigPortalTimeout(Portal_timeOut); 			// autoConnect function will return, no matter the outcome in xxx seconds
+	  if(wm.getWiFiIsSaved()){
+		  Serial.println(F("============== WiFi Saved =================="));
+		  wm.autoConnect(MYHOSTNAME"_AP");
+	  } else {
+		  Serial.println(F("=============== WiFi *NOT* Saved ==================="));
+		  WiFi.begin(ssid, password);
+	  }
+  }
+
+
+#else
+
   WiFi.begin(ssid, password);
+
 #endif
 
-  Serial.println("");
-
-
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  int connect_attempts = 120;	// around 60 seconds
+  while (WiFi.status() != WL_CONNECTED && connect_attempts >= 0) {
+  	Serial.print('.');
+      	connect_attempts--;
+          delay(500); yield();
   }
   Serial.println("");
+
+  if(WiFi.status() !=  WL_CONNECTED) m_reset();				// Give up, force reboot
+
+  //	Free Heap = 31600	HeapFragmentation = 6	MaxFreeBlockSize = 29792 OK
+  //	Free Heap = 30224	HeapFragmentation = 26	MaxFreeBlockSize = 22040 !OK
+  showFree(true);
+  if(ESP.getHeapFragmentation() > 12){
+	  Serial.println(F("Heap too fragmented reboot forced"));	// Configure AP Access point fragments memory;
+	  m_reset();		// free some memory
+  }
+
+  Serial.println("");
   Serial.print(F("Connected to "));
-  Serial.println(ssid);
+  Serial.println(WiFi.SSID());
   Serial.print(F("IP address: "));
   Serial.println(WiFi.localIP());
 }
@@ -59,7 +84,7 @@ void setupServer(void){
 	  server.on(F("/wxID"), 		iDLED);  // For html get function that calls flash LEDs
 
 	  server.begin();
-	  Serial.println("HTTP server started");
+	  Serial.println(F("HTTP server started"));
 
 
 

@@ -439,9 +439,8 @@ int loopLEDSectional() {
   }
   if (retVal < 0) retVal = 0; // JIC
   if(cycleErrCount > 15){
-    Serial.println(F("Too many connection errors forcing reset"));
-    ESP.reset();      // Not sure which one to use reports that .restart() has problems
-    ESP.restart();
+	  Serial.println(F("Too many connection errors forcing reset"));
+	  m_reset();
   }
   return retVal;      // new loop_time
 } // loopLedSectional
