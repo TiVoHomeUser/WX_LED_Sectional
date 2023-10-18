@@ -13,10 +13,10 @@ void setupConnection(void){
 	  WiFiManager wm;
 	  wm.setConfigPortalTimeout(Portal_timeOut); 			// autoConnect function will return, no matter the outcome in xxx seconds
 	  if(wm.getWiFiIsSaved()){
-		  Serial.println(F("============== WiFi Saved =================="));
+//		  Serial.println(F("============== WiFi Saved =================="));
 		  wm.autoConnect(MYHOSTNAME"_AP");
 	  } else {
-		  Serial.println(F("=============== WiFi *NOT* Saved ==================="));
+//		  Serial.println(F("=============== WiFi *NOT* Saved ==================="));
 		  WiFi.begin(ssid, password);
 	  }
   }

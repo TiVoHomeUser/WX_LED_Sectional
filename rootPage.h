@@ -16,11 +16,12 @@
 void rootPage(){
   Serial.print(F("Hello from rootPage     \tClient IP = "));
   Serial.print(server.client().remoteIP().toString());
-  Serial.print(F("\tWiFi SSID: ")); Serial.println(WiFi.SSID());
+  Serial.print(F("\tWiFi SSID: ")); Serial.print(WiFi.SSID());
   Serial.print(F(" Light Sensor = ")); Serial.print(brightness);
   Serial.print(F(" rtmaxl = ")); Serial.print(rtmaxl);
   Serial.print(F("\t # WX stations = ")); Serial.println(actualNumAirports);
   Serial.print(F("\tUptime = ")); Serial.print(uptime());
+  Serial.print(F(" C/E ")); Serial.print(cycleCount); Serial.print(F(" / ")); Serial.println(cycleErrCount);
 
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send_P( 200, "text/html", htmlHeadStr);

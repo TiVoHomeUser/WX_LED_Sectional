@@ -14,8 +14,13 @@
 #include <ESP8266WebServer.h>
 
 
-#define WXSERVER "www.aviationweather.gov"
-#define BASE_URI "/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
+// #define WXSERVER "www.aviationweather.gov"
+// #define BASE_URI "/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
+
+/* NEW Oct 17 2023 change in aviaionweather web pages*/
+#define WXSERVER "aviationweather.gov"
+#define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
+
 #define my_yield() {ESP.wdtFeed(); yield();}     // reported problems with yield() not always reseting the software watchdog timer
 
 int retVal;		// To save memory used everywhere
