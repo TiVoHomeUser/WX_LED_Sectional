@@ -1,20 +1,28 @@
 /*
 user_settings.ino
  Created on: Jan 1, 2021
-     Author: imac
+     Author: vwheeler
 */
 
 #ifndef USER_INFO_INO
 #define USER_INFO_INO 1
 
-#define AUTOCONNECT true          // Use WiFi Connection manager with fallback web configuration portal instead of hard-coded SSID and Password
-                                  // Consumes extra 2 to 3K of valuable ram
+#define INFO_PAGE	false				// include /info html page off by default to conserve memory
+										// really only needed in 2 places
 
-#include "credentials.h"          // Contains Hostname and WiFi credentials STASSID and STAPSK I don't want to be public
+#define AUTOCONNECT true          		// Use WiFi Connection manager with fallback web configuration portal instead of hard-coded SSID and Password
+                                  	  	// Consumes extra 2 to 3K of valuable ram
+
+#include "credentials.h"          		// Contains Hostname and WiFi credentials STASSID and STAPSK I don't want to be public
+
+#define CONNECTION_ERR_RRBOOT 15		// Number of connection errors that will force a reboot
 
 #define NUM_AIRPORTS 100                // This is really the number of LEDs not Stations
+
 // FYI using test array 32 = 24, 44 = 32, 60 = 40, 73 = 48, 75 = 50, 86 = 56, 100 = 64,  132 = 96, 136 = 100, 140 = 104
-const static int numOfAirportsGet = 32; //27; //30; //32; //NUM_AIRPORTS; // Number of airports to download per loop
+const static int numOfAirportsGet = 10; //32; //27; //30; //32; // Number of airports to download per loop
+										// New page downloads 1000 bytes per station really need to limit the buffer size until download can be trimmed
+
 #define WX_REFRESH_INTERVAL  15         // Minutes between WX updates
 
 #define WIND_THRESHOLD 25               // Maximum wind speed for green, otherwise the LED turns yellow
@@ -27,7 +35,7 @@ const static int numOfAirportsGet = 32; //27; //30; //32; //NUM_AIRPORTS; // Num
 // Kits shipped after March 1, 2019 have a digital light sensor. Setting this to false assumes an analog light sensor.
 #define LIGHT_SENSOR_TSL2561 true
 
-const static char PROGMEM airports[][5] = {
+const static char PROGMEM airports[NUM_AIRPORTS][5] = {
   "KBEH", // 1
   "KLWA", // 2
   "NULL", // 3

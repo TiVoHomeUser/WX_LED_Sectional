@@ -170,9 +170,17 @@ void showFree(boolean force) {
  *                  Note: Max Uptime counter is 49 days 17 hours 2 minutes and 47 Seconds
  *                  Update: 12/16 added 49 day overflow counter so should work for 999 * 49 days (Like that is going to happen)
  */
+#define INCLUDE_MIN_SEC false	// format return string true include minutes and seconds
+
 static unsigned long m_secs, m_mins;
 static unsigned int m_hours, m_days;
-static char m_uptimeCstr[] = "365:23:59:59"; // max value for millis() is 4,294,967,295 or 49.71 days
+
+#if INCLUDE_MIN_SEC
+	static char m_uptimeCstr[] = "Uptime (D:H:M:S) 365:23:59:59"; // max value for millis() is 4,294,967,295 or 49.71 days
+#else
+	static char m_uptimeCstr[] = "Uptime (D:H) 365:23"; // max value for millis() is 4,294,967,295 or 49.71 days
+#endif
+
  char* uptime(){
   // moved to timeElapsed()  if(m_lastvalue > millis()) m_overflow++;
   m_secs=millis() /1000;                    // Convert to seconds
@@ -187,10 +195,24 @@ static char m_uptimeCstr[] = "365:23:59:59"; // max value for millis() is 4,294,
   m_mins =  m_secs / 60; m_hours = m_mins / 60; m_days = m_hours/24;
   m_secs -= m_mins * 60; m_mins -= m_hours * 60; m_hours -= m_days*24;
   m_uptimeCstr[0] = '\0';
+
+#if INCLUDE_MIN_SEC
+//  static char m_uptimeCstr[31] = "\0ptime (D:H:M:S) 365:23:59:59"; // max value for millis() is 4,294,967,295 or 49.71 days
+  strcat(m_uptimeCstr, "Uptime (D:H:M:S) ");
+#else
+//  static char m_uptimeCstr[21] = "\0Uptime (D:H) 365:23"; // max value for millis() is 4,294,967,295 or 49.71 days
+  strcat(m_uptimeCstr, "Uptime (D:H) ");
+#endif
+
   strcat(m_uptimeCstr, b2cs(m_days));  strcat(m_uptimeCstr, ":");
+
+#if INCLUDE_MIN_SEC //modified to remove minutes ad seconds.
   strcat(m_uptimeCstr, b2cs(m_hours)); strcat(m_uptimeCstr, ":");
   strcat(m_uptimeCstr, b2cs(m_mins));  strcat(m_uptimeCstr, ":");
   strcat(m_uptimeCstr, b2cs(m_secs));  //strcat(m_uptimeCstr, ":");
+#else
+  strcat(m_uptimeCstr, b2cs(m_hours));
+#endif
   return m_uptimeCstr;
  }
 

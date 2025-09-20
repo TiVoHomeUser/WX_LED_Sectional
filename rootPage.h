@@ -34,19 +34,27 @@ void rootPage(){
    *  "<script type=\"text/javascript\">setTimeout(\"location.reload()\",120000);</script>\n";
    */
   server.sendContent(F("</head><body><h1 align=\"center\" style=\"color:lighttgray;margin:20px;\">\n" )); //<h6 \"color: #DFF2FB;\">\n")); // h6 {color: #DFF2FB;}\n"
-  server.sendContent(hostname); /* server.sendContent(F(" on ")); server.sendContent(WiFi.SSID()); */ server.sendContent(F("</h1>"));
+
+  if(lightningLeds.size() > 0)
+	  server.sendContent_P(lightingSymb);
+  server.sendContent(hostname); /* server.sendContent(F(" on ")); server.sendContent(WiFi.SSID()); */
+  if(lightningLeds.size() > 0)
+	  server.sendContent_P(lightingSymb);
+  server.sendContent(F("</h1>"));
 
   server.sendContent(F("<h6 align=\"center\" style=\"color.blue;margin:15px;\">"));
   server.sendContent(F( copyright)); server.sendContent(F(" ")); server.sendContent(F(compiledate));
   server.sendContent(F("</h6>\n"
-                       "<h4 align=\"center\" style=\"color.blue;margin:15px;\">build ")); server.sendContent(F( compiledate));
-  	  	  	  	  	   server.sendContent(F(" Uptime (D:H:M:S) ")); server.sendContent(uptime());
-  	  	  	  	  	   server.sendContent(F(" Next update: ")); server.sendContent(b2Scs((loop_interval - loop_time) / 60));	// Minutes
+                       "<h4 align=\"center\" style=\"color.blue;margin:15px;\">")); //build ")); server.sendContent(F( compiledate));
+  	  	  	  	  	  server.sendContent(uptime());
+
+	  	   	   	   	   server.sendContent(F(" Next update: ")); server.sendContent(b2Scs((loop_interval - loop_time) / 60));	// Minutes
   	  	  	  	  	   server.sendContent(F(":"));
   	  	  	  	  	   server.sendContent(b2Scs((loop_interval - loop_time) - (((loop_interval - loop_time) / 60) * 60)));		// Seconds
-                       server.sendContent(F("</h4><p>\n"));
 #if DEBUG
-                       server.sendContent(F("<h4 align=\"center\"> #WX Stations ")); server.sendContent(b2Scs(actualNumAirports));
+                       //server.sendContent(F("<p><h4 align=\"center\"> #WX Stations "));
+                       server.sendContent(F("<p>#WX Stations "));
+                       server.sendContent(b2Scs(actualNumAirports));
                        server.sendContent(F(" MaxTxt Size = ")); server.sendContent(b2Scs(rtmaxl));
                        server.sendContent(F(" Total = ")); server.sendContent(b2Scs(total_C_StringLen));
                        server.sendContent(F(" OOM Count = ")); server.sendContent(b2Scs(ooMemCnt)); //String(currentLineMax).c_str());
@@ -55,7 +63,14 @@ void rootPage(){
                        server.sendContent(b2Scs(cycleCount)); //String(cycleCount).c_str());
                        server.sendContent(F(" / ")); server.sendContent(b2Scs(cycleErrCount)); //String(cycleErrCount).c_str());
                        server.sendContent(F("</h4>\n"));
+#else
+                       if(cycleErrCount > 0){
+                    	server.sendContent(F(" Conn/Err: "));
+                        server.sendContent(b2Scs(cycleCount)); //String(cycleCount).c_str());
+                        server.sendContent(F(" / ")); server.sendContent(b2Scs(cycleErrCount)); //String(cycleErrCount).c_str());
+                       }
 #endif // DEBUG
+                       server.sendContent(F("</h4><p>\n"));
 
  server.sendContent(F( "<h5 align=\"center\"> "
                        "<a href=\"stationsL\">Stations: Desktop,</a>&nbsp;&nbsp;&nbsp;&nbsp;"

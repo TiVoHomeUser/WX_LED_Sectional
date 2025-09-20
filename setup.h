@@ -13,10 +13,10 @@ void setupConnection(void){
 	  WiFiManager wm;
 	  wm.setConfigPortalTimeout(Portal_timeOut); 			// autoConnect function will return, no matter the outcome in xxx seconds
 	  if(wm.getWiFiIsSaved()){
-//		  Serial.println(F("============== WiFi Saved =================="));
+		  Serial.println(F("============== WiFi Saved =================="));
 		  wm.autoConnect(MYHOSTNAME"_AP");
 	  } else {
-//		  Serial.println(F("=============== WiFi *NOT* Saved ==================="));
+		  Serial.println(F("=============== WiFi *NOT* Saved ==================="));
 		  WiFi.begin(ssid, password);
 	  }
   }
@@ -82,17 +82,15 @@ void setupServer(void){
 	  server.on(F("/reboot")   ,	rebootPage);
 	  server.on(F("/sliderpage"),	slider_page);
 	  server.on(F("/wxID"), 		iDLED);  // For html get function that calls flash LEDs
-
+#if INFO_PAGE
+	  server.on(F("/info"),			infoPage);
+#endif
 	  server.begin();
 	  Serial.println(F("HTTP server started"));
 
 
 
 }
-
-//void setupClient(){
-//
-//}
 
 /*
 
@@ -196,7 +194,15 @@ void setupAirportString() {
 
   // Using pointers create several null terminated sub-strings from airportString
   noOfAirportStrings = (int) ( ( (double) actualNumAirports / (double) numOfAirportsGet) + 0.9);  // number of sub strings needed round up for the last possibly partial line
+  if(noOfAirportStrings < 1) noOfAirportStrings = 1;	 // Got to make some room todo at least one loop
   airportStrings = new char*[sizeof(char*) * noOfAirportStrings];     // For the pointers into the airportString replace the last ',' with a null creating shorter c_strings
+
+#if DEBUG
+  Serial.print("noOfAirportStrings = "); Serial.print(noOfAirportStrings);
+  Serial.print("\tactualNumAirports = "); Serial.print(actualNumAirports);
+  Serial.print("\tairportStrings size = "); Serial.println(	sizeof(char*) * noOfAirportStrings ); Serial.flush();
+#endif
+
   airportIndex = new int[noOfAirportStrings+1];                       // index into the main airports string to limit number of string compares when processing data downloaded using the sub
   airportIndex[0] = 0;                                                // stings. Make +1 because we are starting with 0 and the last location = the end
   int sindex[actualNumAirports];                                      // temp to track and convert string index to substring index
@@ -223,7 +229,7 @@ void setupAirportString() {
   // remove the last ','
   if( airportString[strlen(airportString) -1] == ','){
     airportString[strlen(airportString) -1] = '\0';  // terminate end even if partial
-  } // else Serial.println("Something is verry wrong airportString not ',' terminated");
+  } // else Serial.println("Something is very wrong airportString not ',' terminated");
 
   for (int i = 1; i < noOfAirportStrings; i++) {                      // the end of first is the start of next sub-string
     airportStrings[i] = airportString + ((numOfAirportsGet * 5) * i); // remember first string / substring started at 0
@@ -293,6 +299,7 @@ void setupAirportString() {
    *                         2  14
    *
    */
+#if WX_DEBUG
   Serial.print(F("Creating a new airportString ")); Serial.print(strlen( airportString));
   Serial.print(F(" size ")); Serial.print(airportStringsSize);
   Serial.print(F(" noOf ")); Serial.print(noOfAirportStrings);
@@ -304,6 +311,8 @@ void setupAirportString() {
     Serial.print(F("<< "));
     Serial.println(airportIndex[i+1]);    // started with 0 with one additional location
   }
+#endif
+
   return;
 }
 

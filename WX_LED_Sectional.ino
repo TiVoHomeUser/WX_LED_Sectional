@@ -26,9 +26,15 @@
  *    	  - Adafruit TSL2561 by Adafruit
  *
  */
+/*
+ * 2024/06/12
+ * 		Removed months and seconds from Up time display rootpage.h and utilites.h
+ * 		added error count display on rootpage when there are connection error(s)
+ */
 #include "Arduino.h"
 
 #include "user_settings.h"
+
 #include "WX_LED_Sectional.h"
 
 const char* ssid = STASSID;
@@ -41,12 +47,18 @@ ESP8266WebServer server(80);
 #define MY_ID       1
 #define MY_TEST     2
 #define MY_WXUPDATE 3
+#define MY_LED_REFRESH	4
+
 byte my_Event = MY_TEST;
 const unsigned int loop_interval = WX_REFRESH_INTERVAL * 60;    // How often to run WX update converted in seconds
 unsigned int loop_time = loop_interval;                         // Force WX update first loop
-
 // Not really 'c' header files break up this .ino file into smaller sections still accessible by the Arduino IDE
 #include "utilities.h"
+
+#if INFO_PAGE
+	#include "infoPage.h"
+#endif
+
 #include "LEDString.h"
 #include "notFoundPage.h"
 #include "testPage.h"
@@ -88,20 +100,33 @@ void loop(void) {
        break;
 
        case MY_TEST:{						// Cycle colors all LEDs
+#if WX_DEBUG
+    	   loop_time = loop_interval - 5;	// force update
+    	   my_Event = NO_EVENT;
+#else
            // To prevent Software WD timeout test is called from loop 5 times
            if(testTime <= loop_time ){
              test();
              testTime = loop_time + 5;         // 5 seconds before next test
            }
+#endif
        }
        break;
 
        case MY_WXUPDATE:{
     	   server.close();                     // Stop clients from locking up the 4 available connections
            loop_time = loopLEDSectional();     // Return allows loop time to be adjusted for WX GET failures
+           my_Event = MY_LED_REFRESH;
            server.begin();                     // Restart Service
            testTime = loop_time;               // When loop_time overflows the next test may be delayed
-           my_Event = NO_EVENT;
+           //my_Event = NO_EVENT;
+       }
+       break;
+
+       case MY_LED_REFRESH:{
+    	   //FastLED.clear();
+    	   FastLED.show();
+    	   my_Event = NO_EVENT;
        }
        break;
 

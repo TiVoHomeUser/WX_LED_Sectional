@@ -1,9 +1,9 @@
 #ifndef metars_ino
 #define metars_ino "Sept 14, 2021"
-// 2021/09/14 Fix for station's Button can display last metar condictions after a station goes off-line  V.W>
+// 2021/09/14 Fix for station's Button can display last metar conditions after a station goes off-line  V.W>
 
-void doColor(char* identifier, unsigned short int led, int wind, int gusts, char* condition, char* wxstring, const char* rawText){ //, boolean last) {
-  showFree( false );
+
+  void doColor(char* identifier, unsigned short int led, int wind, int gusts, char* condition, char* wxstring, const char* rawText){
 #if WX_DEBUG
   Serial.print(F("\t")); Serial.print(identifier);
   Serial.print(F(": "));
@@ -60,7 +60,7 @@ void doColor(char* identifier, unsigned short int led, int wind, int gusts, char
   mtrsf[led].mtrgusts = gusts;
   mtrsf[led].rawText = rawText;
   total_C_StringLen += strlen(rawText);
-  FastLED.show(); // Kid of cool update display as each down-loaded
+  // TODO FastLED.show(); // Kid of cool update display as each down-loaded
   // Note: causes the ones not loaded to go black and may be annoying
 } // doColor()
 
@@ -82,21 +82,29 @@ void doColor(char* identifier, unsigned short int led, int wind, int gusts, char
 #define GUST        4
 #define WX          5
 #define RAWTEXT     6
-#define CURLINESIZE 230 //320   // Normally 220 addinf 100 temporarily till finalized
-
-// static unsigned int currentLineMax = 0;    // String currentLine is used to collect / process WX input for each station loop.
+#define CURLINESIZE 1024 // Working line buffer size I avoid using Strings due to memory overhead
+// Starting with CURLINESIZE = 1000 without reseting the line pointer at the start of each station each increases the overflow by
+//  first test		Second test
+// 1 = 233			233
+// 2 = 920	+687	1038	+805
+// 3 = 1591	+671	1709	+761
+// 4 = 2336	+745	2513	+804
+// 5 = 3079	+743	3194	+681
+// 6 = 3998	+901	3998	+804
 
 // These arrays are used only in getMetars() Not global only defined outside function to limit memory fragmentation
 static char currentAirport[5];   // KDTW KYIP ...
 static char currentCondition[5]; // VFR LIFR ...
 static char currentWind[4];      // current wind conditions expect 0 to 99 allow for three places + term JIC over 100 kts
 static char currentGusts[4];     //                "                   "                   "
-static char currentLine[CURLINESIZE]; // Buffer for collecting the data as received to progress for each station
+static char currentLine[CURLINESIZE]; // Working buffer used for collecting the data as received to progress for each station
 static char currentWxstring[26]; // Wx notes TS -SN RA ...
 
-// static byte ooMemCnt;
-
 bool getMetars() {
+#if	DEBUG
+	static int maxlncnt=0;	// Test to configure the max size to allocate for the line processing buffer
+#endif
+
 //  Server.close();         // Stop connections
   total_C_StringLen = 0;
   boolean maxexcd = false;  // For debugging c-string size
@@ -147,8 +155,7 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
   client.setInsecure();
   //Serial.println(F("\nStarting connection to server..."));
   client.setTimeout(8000);
-
-
+  
   if (!client.connect(WXSERVER, 443)) {
     char str[81]; str[0] = '\0'; // For return of the SSLError results
 #ifdef DEBUG
@@ -170,7 +177,6 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
       delay(1000);
     }
   }
-
   // if you get a connection, report back via serial:
   FastLED.clear();    // Clears leds[] reset only once for all group(s) of downloads
   for (int wxLoopCnt = 0; wxLoopCnt < noOfAirportStrings; wxLoopCnt++) {
@@ -182,8 +188,36 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
 
     Serial.println(F("Connected ..."));
 
-    Serial.print(F("GET ")); Serial.print(BASE_URI); Serial.print(airportStrings[wxLoopCnt]); Serial.println(F(" HTTP/1.1")); Serial.print(F("Host: ")); Serial.println(WXSERVER);
-    client.print(F("GET ")); client.print(BASE_URI); client.print(airportStrings[wxLoopCnt]); client.println(F(" HTTP/1.1")); client.print(F("Host: ")); client.println(WXSERVER);
+    //  Serial.print(F("GET ")); Serial.print(BASE_URI); Serial.print(airportStrings[wxLoopCnt]); Serial.println(F(" HTTP/1.1")); Serial.print(F("Host: ")); Serial.println(WXSERVER);
+    //  client.print(F("GET ")); client.print(BASE_URI); client.print(airportStrings[wxLoopCnt]); client.println(F(" HTTP/1.1")); client.print(F("Host: ")); client.println(WXSERVER);
+    // NEW 9/2025
+    //    Serial.print(F("GET ")); Serial.print(BASE_URI); Serial.println(airportStrings[wxLoopCnt]); //Serial.println(F("&format=xml"));
+    //    Serial.print(F("Host: ")); Serial.println(WXSERVER);
+    //    client.print(F("GET ")); client.print(BASE_URI); client.print(airportStrings[wxLoopCnt]); //client.println(F("&format=xml"));
+    //    client.print(F("Host: ")); client.println(WXSERVER);
+
+#if WX_DEBUG
+    Serial.print("GET ");
+    Serial.print(BASE_URI);
+    Serial.println(airportStrings[wxLoopCnt]);
+    Serial.println(" HTTP/1.1");
+    Serial.print("Host: ");
+    Serial.println(WXSERVER);
+    Serial.println("User-Agent: LED Sectional Client");
+    //Serial.println("Connection: close");
+    Serial.println();
+    Serial.flush();
+my_yield();
+#endif
+
+
+    client.print("GET ");
+    client.print(BASE_URI);
+    client.print(airportStrings[wxLoopCnt]);
+    client.println(" HTTP/1.1");
+    client.print("Host: ");
+    client.println(WXSERVER);
+    client.println("User-Agent: LED Sectional Client");
     if (wxLoopCnt < (noOfAirportStrings - 1)) { // Request keep connection open
       Serial.println(F("Connection: Keep-Alive"));
       client.println(F("Connection: Keep-Alive"));
@@ -191,8 +225,9 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
       Serial.println(F("Connection: close"));
       client.println(F("Connection: close"));
     }
-    Serial.println(); Serial.flush();
-    client.println(); client.flush();
+    //client.println("Connection: close");
+    client.println();		// seems to be important does not get data without this
+    client.flush();
 
     gtimeout = millis() + (20 * 60 * 1000);
     while (!client.available() && gtimeout > millis()) {
@@ -203,50 +238,35 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
 
     //  FastLED.clear(); NOT HERE wipes out previous download
 
-
-
     /*
             Read from buffer Loop
     */
     //while (client.connected()) {
     short ic;		//	Not sure how Arduino handles chars do it the safe way
+int overflow = 0;
+client.find("METAR");	// Skip through a large chunck of the buffer
+
     while (client.available()) {
       if ((ic = client.read()) >= 0){
     	  c = (char) ic;
     	  if (isAscii(c)) {
           my_yield(); // Otherwise the WiFi stack can crash
-
           if ( lncnt - 2 < CURLINESIZE )  // Add to buffer else Out of buffer run out data until endl
             currentLine[lncnt++] = c;
+          else{
+        	  Serial.print(F("Exceeded line size by ")); Serial.println(overflow++);
+          }
+
+#if DEBUG
+          if(lncnt > maxlncnt){
+        	  maxlncnt = lncnt;
+        	  Serial.print("Max Line count = "); Serial.println(maxlncnt); // currently 997
+          }
+#endif
+
           currentLine[lncnt] = '\0';
           if ( '\n' == c || '\r' == c ) {      // Ready for a new line
-            /*
-                                // Line example
-                <METAR>
-                  <raw_text>KJXN 222156Z 24007KT 10SM FEW029 28/21 A2993 RMK AO2 SLP129 T02780206 $</raw_text>
-                  <station_id>KJXN</station_id>
-                  <observation_time>2020-07-22T21:56:00Z</observation_time>
-                  <latitude>42.27</latitude>
-                  <longitude>-84.47</longitude>
-                  <temp_c>27.8</temp_c>
-                  <dewpoint_c>20.6</dewpoint_c>
-                  <wind_dir_degrees>240</wind_dir_degrees>
-                  <wind_speed_kt>7</wind_speed_kt>
-                  <visibility_statute_mi>10.0</visibility_statute_mi>
-                  <altim_in_hg>29.929134</altim_in_hg>
-                  <sea_level_pressure_mb>1012.9</sea_level_pressure_mb>
-                  <quality_control_flags>
-                    <auto_station>TRUE</auto_station>
-                    <maintenance_indicator_on>TRUE</maintenance_indicator_on>
-                  </quality_control_flags>
-                  <sky_condition sky_cover="FEW" cloud_base_ft_agl="2900" />
-                  <flight_category>VFR</flight_category>
-                  <metar_type>METAR</metar_type>
-                  <elevation_m>305.0</elevation_m>
-                </METAR>
 
-
-            */
 
             lncnt = 0;
             currentLine[lncnt] = '\0';
@@ -265,9 +285,7 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
                   cnt = 0;
                   st = airportIndex[wxLoopCnt];
                   en = airportIndex[wxLoopCnt + 1];
-                  // Serial.print(F("Searching from ")); Serial.print(st); Serial.print(F(" To ")); Serial.println(en);
                   do {
-                    //if (strcmp_P(currentAirport.c_str(), airports[st]) == 0) {
                     if (strcmp_P(currentAirport, airports[st]) == 0) {
                       led = st;
                       st = en;    // FOUND IT! break
@@ -275,7 +293,6 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
                     st++;         // increment even if found to force exit
                   } while (st <= en);
                 }
-                //            } else { // readingAirport
                 break;
               }
 
@@ -332,7 +349,7 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
                   }
                 } else {
                   wxcheck = DONE;
-if(counter >= bigBlockSize) ooMemCnt++;
+                  if(counter >= bigBlockSize) ooMemCnt++;
                   bigBlock[counter++] = '\0'; // terminate and ready for next airport
                   if (strlen(rawText) > rtmaxl) {
                     rtmaxl = strlen(rawText);
@@ -375,6 +392,12 @@ if(counter >= bigBlockSize) ooMemCnt++;
                           } else {
                             if (cendsWith(currentLine, "<wx_string>")) {
                               wxcheck = WX;
+                            } else {
+                            	if(cendsWith(currentLine, "</raw_text>")){	// New for wxweather.gov September 2025 update data not separated by CR or LF
+                                    lncnt = 0;
+                                    currentLine[lncnt] = '\0';
+
+                            	}
                             }
                           }
                         }
@@ -408,11 +431,12 @@ if(counter >= bigBlockSize) ooMemCnt++;
     }
 
   } // loop loopWxGet
-//  delay(100); my_yield(); delay(100); my_yield(); if (client.available()) Serial.println(F("--------------------------- More data Available ---------------------"));
-
   client.stop();
-//  my_yield();
-//  Server.begin();     // resume connections
+
+#if DEBUG
+  Serial.print(F("Max Line count = ")); Serial.println(maxlncnt); // currently 997
+#endif
+
   return true;
 } // getMetars()
 
@@ -438,7 +462,7 @@ int loopLEDSectional() {
     cycleErrCount++; // count bad connections if too many force reboot
   }
   if (retVal < 0) retVal = 0; // JIC
-  if(cycleErrCount > 15){
+  if(cycleErrCount > CONNECTION_ERR_RRBOOT){
 	  Serial.println(F("Too many connection errors forcing reset"));
 	  m_reset();
   }
