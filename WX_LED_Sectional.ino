@@ -1,5 +1,5 @@
 
-#define copyright "&#169; Aug 2022 VictorWheeler myapps@vicw.net use, modify and distribute without restrictions"
+#define copyright "&#169; Sep 2025 VictorWheeler myapps@vicw.net use, modify and distribute without restrictions"
 #define compiledate __DATE__
 /*
  * 	https://github.com/TiVoHomeUser/WX_LED_Sectional
@@ -115,16 +115,14 @@ void loop(void) {
 
        case MY_WXUPDATE:{
     	   server.close();                     // Stop clients from locking up the 4 available connections
-           loop_time = loopLEDSectional();     // Return allows loop time to be adjusted for WX GET failures
-           my_Event = MY_LED_REFRESH;
-           server.begin();                     // Restart Service
-           testTime = loop_time;               // When loop_time overflows the next test may be delayed
-           //my_Event = NO_EVENT;
+         loop_time = loopLEDSectional();     // Return allows loop time to be adjusted for WX GET failures
+         testTime = loop_time;               // When loop_time overflows the next test may be delayed
+         my_Event = MY_LED_REFRESH;
+         server.begin();                     // Restart Service
        }
        break;
 
        case MY_LED_REFRESH:{
-    	   //FastLED.clear();
     	   FastLED.show();
     	   my_Event = NO_EVENT;
        }

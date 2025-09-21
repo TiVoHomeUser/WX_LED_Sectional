@@ -82,7 +82,7 @@
 #define GUST        4
 #define WX          5
 #define RAWTEXT     6
-#define CURLINESIZE 1024 // Working line buffer size I avoid using Strings due to memory overhead
+#define CURLINESIZE 256 // 217 max after terminating line for each "/>" 1024 with cr/lf // Working line buffer size I avoid using Strings due to memory overhead
 // Starting with CURLINESIZE = 1000 without reseting the line pointer at the start of each station each increases the overflow by
 //  first test		Second test
 // 1 = 233			233
@@ -105,7 +105,6 @@ bool getMetars() {
 	static int maxlncnt=0;	// Test to configure the max size to allocate for the line processing buffer
 #endif
 
-//  Server.close();         // Stop connections
   total_C_StringLen = 0;
   boolean maxexcd = false;  // For debugging c-string size
 
@@ -139,7 +138,7 @@ bool getMetars() {
   currentWxstring[cnt] = '\0';
   int lncnt = 0;
   currentLine[lncnt] = '\0';
-ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory message
+//ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory message
   const char* rawText = &bigBlock[firstAvailable]; // Pointer for the next substring thats added to airport structure
   int counter = firstAvailable;       // start of wx raw text
   // AirportString =
@@ -147,7 +146,7 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
   //  KLAN,KY70,KGRR,KBIV,KMKG,KFFX,KRQB,KLDM,KMBL,KFKS,KCAD,KTVC,KACB,KCVX,KMGN,KPLN,KMCD,KSLH,KPZQ,KAPN,KOSC,KBAX,KCFS,KHYX,KMBS,KIKW,KAMN,KMOP,KY31,KHTL,KGOV,KGLR}
   Serial.print(F("GetMetars\t"));
 
-#ifdef DEBUG
+#if DEBUG
   showFree(true);
 #endif
 
@@ -155,10 +154,10 @@ ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory 
   client.setInsecure();
   //Serial.println(F("\nStarting connection to server..."));
   client.setTimeout(8000);
-  
+
   if (!client.connect(WXSERVER, 443)) {
     char str[81]; str[0] = '\0'; // For return of the SSLError results
-#ifdef DEBUG
+#if DEBUG
     showFree(true);
 #endif
     Serial.print(F("Connection failed! : ")); Serial.println(client.getLastSSLError(str, 80)); Serial.println(str); //Serial.println(strlen(str));
@@ -235,26 +234,80 @@ my_yield();
       //delay(10);
       ;;
     }
+/*
+ * 								New station data (cr and lf's added manually)
+ * <METAR>
+ * 	<raw_text>METAR KBEH 201853Z AUTO 00000KT 10SM OVC090 23/20 A3007 RMK AO2 RAB06E24 SLP180 P0003 T02330200 $</raw_text>
+ * 	<station_id>KBEH</station_id><observation_time>2025-09-20T18:53:00.000Z</observation_time>
+ * 	<latitude>42.1290</latitude>
+ * 	<longitude>-86.4152</longitude>
+ * 	<temp_c>23.3</temp_c>
+ * 	<dewpoint_c>20</dewpoint_c>
+ * 	<wind_dir_degrees>0</wind_dir_degrees>
+ * 	<wind_speed_kt>0</wind_speed_kt>
+ * 	<visibility_statute_mi>10+</visibility_statute_mi>
+ * 	<altim_in_hg>30.07</altim_in_hg>
+ * 	<sea_level_pressure_mb>1018</sea_level_pressure_mb>
+ * 	<quality_control_flags>
+ * 		<auto>TRUE</auto>
+ * 		<auto_station>TRUE</auto_station>
+ * 		<maintenance_indicator_on>TRUE</maintenance_indicator_on>
+ * 	</quality_control_flags>
+ * 	<sky_condition sky_cover="OVC" cloud_base_ft_agl="9000"/>
+ * 	<flight_category>VFR</flight_category>
+ * 	<precip_in>0.03</precip_in>
+ * 	<metar_type>METAR</metar_type>
+ * 	<elevation_m>196</elevation_m>
+ * </METAR>
+ *
+ * <METAR>
+ * 	<raw_text>METAR KGLR 201853Z AUTO 09007G15KT 10SM CLR 21/13 A3020 RMK AO2 SLP227 T02060133</raw_text>
+ * 	<station_id>KGLR</station_id>
+ * 	<observation_time>2025-09-20T18:53:00.000Z</observation_time>
+ * 	<latitude>45.0166</latitude>
+ * 	<longitude>-84.6894</longitude>
+ * 	<temp_c>20.6</temp_c>
+ * 	<dewpoint_c>13.3</dewpoint_c>
+ * 	<wind_dir_degrees>90</wind_dir_degrees>
+ * 	<wind_speed_kt>7</wind_speed_kt>
+ * 	<wind_gust_kt>15</wind_gust_kt>
+ * 	<visibility_statute_mi>10+</visibility_statute_mi>
+ * 	<altim_in_hg>30.20</altim_in_hg>
+ * 	<sea_level_pressure_mb>1022.7</sea_level_pressure_mb>
+ * 	<quality_control_flags>
+ * 		<auto>TRUE</auto>
+ * 		<auto_station>TRUE</auto_station>
+ * 	</quality_control_flags>
+ * 	<sky_condition sky_cover="CLR"/>
+ * 	<flight_category>VFR</flight_category>
+ * 	<metar_type>METAR</metar_type>
+ * 	<elevation_m>403</elevation_m>
+ * 	</METAR>
+ *
+ * 	</data></response>Refreshing LEDs.
+ *
+ */
 
     //  FastLED.clear(); NOT HERE wipes out previous download
 
     /*
             Read from buffer Loop
     */
-    //while (client.connected()) {
     short ic;		//	Not sure how Arduino handles chars do it the safe way
-int overflow = 0;
-client.find("METAR");	// Skip through a large chunck of the buffer
+    int overflow = 0;
+    client.find("METAR");	// Skip through a large chunk of the buffer
 
     while (client.available()) {
       if ((ic = client.read()) >= 0){
     	  c = (char) ic;
     	  if (isAscii(c)) {
           my_yield(); // Otherwise the WiFi stack can crash
-          if ( lncnt - 2 < CURLINESIZE )  // Add to buffer else Out of buffer run out data until endl
+          if ( (lncnt - 2) < CURLINESIZE ){  // Add to buffer else Out of buffer run out data until endl
             currentLine[lncnt++] = c;
-          else{
+          } else {
         	  Serial.print(F("Exceeded line size by ")); Serial.println(overflow++);
+            lncnt = 0;              // Reset buffer to get additional as buffer allready processed
+            currentLine[lncnt] = '\0';
           }
 
 #if DEBUG
@@ -264,10 +317,9 @@ client.find("METAR");	// Skip through a large chunck of the buffer
           }
 #endif
 
-          currentLine[lncnt] = '\0';
-          if ( '\n' == c || '\r' == c ) {      // Ready for a new line
-
-
+          currentLine[lncnt] = '\0';			// Terminate next char in line for string functions
+        //  if ( '\n' == c || '\r' == c ) {     // Ready for a new line
+        if( '\n' == c || '\r' == c || cendsWith(currentLine, "</")){	// Ready for a new line
             lncnt = 0;
             currentLine[lncnt] = '\0';
           } // eoln
@@ -392,13 +444,7 @@ client.find("METAR");	// Skip through a large chunck of the buffer
                           } else {
                             if (cendsWith(currentLine, "<wx_string>")) {
                               wxcheck = WX;
-                            } else {
-                            	if(cendsWith(currentLine, "</raw_text>")){	// New for wxweather.gov September 2025 update data not separated by CR or LF
-                                    lncnt = 0;
-                                    currentLine[lncnt] = '\0';
-
-                            	}
-                            }
+                            } 
                           }
                         }
                       }
@@ -446,7 +492,6 @@ client.find("METAR");	// Skip through a large chunck of the buffer
                             loopLEDSectional
 
 */
-//static  int retVal;
 int loopLEDSectional() {
   retVal = 0;
   Serial.println(F("Getting METARs ..."));
