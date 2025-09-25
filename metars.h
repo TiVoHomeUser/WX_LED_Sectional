@@ -2,6 +2,7 @@
 #define metars_ino "Sept 14, 2021"
 // 2021/09/14 Fix for station's Button can display last metar conditions after a station goes off-line  V.W>
 
+#define DEBUG1 false  // track chars used in parser line buffer 
 
   void doColor(char* identifier, unsigned short int led, int wind, int gusts, char* condition, char* wxstring, const char* rawText){
 #if WX_DEBUG
@@ -82,7 +83,7 @@
 #define GUST        4
 #define WX          5
 #define RAWTEXT     6
-#define CURLINESIZE 256 // 217 max after terminating line for each "/>" 1024 with cr/lf // Working line buffer size I avoid using Strings due to memory overhead
+#define CURLINESIZE 320 //256 // In good weather 217 bytes max terminating line for each "/>" was 1024 with cr/lf // Working line buffer size I avoid using Strings due to memory overhead
 // Starting with CURLINESIZE = 1000 without reseting the line pointer at the start of each station each increases the overflow by
 //  first test		Second test
 // 1 = 233			233
@@ -101,7 +102,8 @@ static char currentLine[CURLINESIZE]; // Working buffer used for collecting the 
 static char currentWxstring[26]; // Wx notes TS -SN RA ...
 
 bool getMetars() {
-#if	DEBUG
+
+#if	DEBUG1
 	static int maxlncnt=0;	// Test to configure the max size to allocate for the line processing buffer
 #endif
 
@@ -235,7 +237,7 @@ my_yield();
       ;;
     }
 /*
- * 								New station data (cr and lf's added manually)
+ * 								New station data NOTE: data does not have any cr or lf's cr's and lf's added manually
  * <METAR>
  * 	<raw_text>METAR KBEH 201853Z AUTO 00000KT 10SM OVC090 23/20 A3007 RMK AO2 RAB06E24 SLP180 P0003 T02330200 $</raw_text>
  * 	<station_id>KBEH</station_id><observation_time>2025-09-20T18:53:00.000Z</observation_time>
@@ -294,7 +296,7 @@ my_yield();
             Read from buffer Loop
     */
     short ic;		//	Not sure how Arduino handles chars do it the safe way
-    int overflow = 0;
+    //int overflow = 0;
     client.find("METAR");	// Skip through a large chunk of the buffer
 
     while (client.available()) {
@@ -305,15 +307,18 @@ my_yield();
           if ( (lncnt - 2) < CURLINESIZE ){  // Add to buffer else Out of buffer run out data until endl
             currentLine[lncnt++] = c;
           } else {
-        	  Serial.print(F("Exceeded line size by ")); Serial.println(overflow++);
-            lncnt = 0;              // Reset buffer to get additional as buffer allready processed
-            currentLine[lncnt] = '\0';
+        	  //Serial.print(F("Exceeded line size by ")); Serial.println(overflow++);
+        	  Serial.println(F("Line LBOF"));
+#if !DEBUG1
+            lncnt = 0;              // Reset buffer to get additional as buffer already processed
+        	  currentLine[lncnt] = '\0';
+#endif
           }
 
-#if DEBUG
+#if DEBUG1
           if(lncnt > maxlncnt){
         	  maxlncnt = lncnt;
-        	  Serial.print("Max Line count = "); Serial.println(maxlncnt); // currently 997
+ //       	  Serial.print("Max Line count = "); Serial.println(maxlncnt); // currently 997
           }
 #endif
 
@@ -479,7 +484,7 @@ my_yield();
   } // loop loopWxGet
   client.stop();
 
-#if DEBUG
+#if DEBUG1
   Serial.print(F("Max Line count = ")); Serial.println(maxlncnt); // currently 997
 #endif
 

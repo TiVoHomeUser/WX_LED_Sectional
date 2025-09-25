@@ -10,6 +10,7 @@ user_settings.ino
 #define INFO_PAGE	false				// include /info html page off by default to conserve memory
 										// really only needed in 2 places
 
+#define HTML		false				// WX LED Sectional LEDs only no Web pages :(
 #define AUTOCONNECT true          		// Use WiFi Connection manager with fallback web configuration portal instead of hard-coded SSID and Password
                                   	  	// Consumes extra 2 to 3K of valuable ram
 
@@ -29,11 +30,11 @@ const static int numOfAirportsGet = 10; //32; //27; //30; //32; // Number of air
 #define DO_WINDS true                   // color LEDs for high winds
 #define DO_LIGHTNING true               // Lightning uses more power, but is cool.
 
-#define USE_LIGHT_SENSOR true			// Set USE_LIGHT_SENSOR to true if you're using any light sensor.
-
-// Set LIGHT_SENSOR_TSL2561 to true if you're using a TSL2561 digital light sensor.
-// Kits shipped after March 1, 2019 have a digital light sensor. Setting this to false assumes an analog light sensor.
-#define LIGHT_SENSOR_TSL2561 true
+#define USE_LIGHT_SENSOR false			// Set USE_LIGHT_SENSOR to true if you're using any light sensor.
+#define LIGHT_SENSOR_TSL2561 false		// Set LIGHT_SENSOR_TSL2561 to true if you're using a TSL2561 digital light sensor
+										// false assumes an analog light sensor.
+#define LIGHT_OFFSET 0				 	// Adjust the LED intensity -128 to 128
+										// lightOffset can be changed using the slider on main html page if enabled.
 
 const static char PROGMEM airports[NUM_AIRPORTS][5] = {
   "KBEH", // 1

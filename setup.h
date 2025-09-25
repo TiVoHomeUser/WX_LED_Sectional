@@ -6,9 +6,9 @@
 
 void setupConnection(void){
   WiFi.mode(WIFI_STA);
-  int Portal_timeOut = (PORTAL_TIMEOUT * 60); // (minutes * seconds);
 
 #if AUTOCONNECT  // AutoConnect obtain credentials from web page
+  int Portal_timeOut = (PORTAL_TIMEOUT * 60); // (minutes * seconds);
   if(WiFi.status() !=  WL_CONNECTED) {
 	  WiFiManager wm;
 	  wm.setConfigPortalTimeout(Portal_timeOut); 			// autoConnect function will return, no matter the outcome in xxx seconds
@@ -72,6 +72,19 @@ void setupSerial(void){
 	  Serial.print(F(copyright)); Serial.print(F(" ")); Serial.println(F(compiledate));
 }
 
+#if HTML
+
+ #define INFO_PAGE	true		        // include /info html page off by default to conserve memory
+
+ #include "notFoundPage.h"
+ #include "testPage.h"
+ #include "rootPage.h"
+ #include "stationPage.h"
+
+#if INFO_PAGE
+	#include "infoPage.h"
+#endif
+
 void setupServer(void){
 	  server.onNotFound(handleNotFound);
 	  server.on(F("/")         , 	rootPage);
@@ -88,9 +101,9 @@ void setupServer(void){
 	  server.begin();
 	  Serial.println(F("HTTP server started"));
 
-
-
 }
+#endif
+
 
 /*
 
@@ -129,8 +142,8 @@ void setupServer(void){
  // #define bigBlockSize (512 * 15)  // 7.5 k Some out of memory 4 today
  // #define bigBlockSize (256 * 31)  // 7.75 k
  // #define bigBlockSize (128 * 63)  // 7.875 k
-  #define bigBlockSize (1024 * 8)   // 8K works in good weather with 100 active stations OK with 64 active
- // #define bigBlockSize (512 * 17)   // 8.5K somewhat OK frequent download fragmentation & errors occasional reboots
+ // #define bigBlockSize (1024 * 8)   // 8K works in good weather with 100 active stations OK with 64 active
+  #define bigBlockSize (512 * 17)   // 8.5K somewhat OK frequent download fragmentation & errors occasional reboots
  // #define bigBlockSize (256 * 35)   // 8.75K Max with 104 stations
  // #define bigBlockSize (128 * 71)   // 8.875K Max with 96 stations
  // #define bigBlockSize (1024 * 10)
