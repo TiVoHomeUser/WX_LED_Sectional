@@ -58,6 +58,8 @@ showFree(true);
       //}
 
       server.sendContent(F("</h2>\n"
+  	  	  	  "<h1 align=\"center\"> <a href=\"/\">ESP8266 WX_Sectional LED</a>\n </h1>"
+
 //	                      "<h3 align=\"center\"> Info </h3>"
 	                      "</body>"
 	                      "</html>"));

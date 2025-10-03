@@ -41,7 +41,9 @@ const char* ssid = STASSID;
 const char* password = STAPSK;
 const char* hostname = MYHOSTNAME;
 
+#if HTML
 ESP8266WebServer server(80);
+#endif
 
 #define NO_EVENT    0
 #define MY_ID       1
@@ -55,18 +57,21 @@ unsigned int loop_time = loop_interval;                         // Force WX upda
 // Not really 'c' header files break up this .ino file into smaller sections still accessible by the Arduino IDE
 #include "utilities.h"
 
-#if INFO_PAGE
-	#include "infoPage.h"
-#endif
 
 #include "LEDString.h"
-#include "notFoundPage.h"
-#include "testPage.h"
-#include "rootPage.h"
-#include "stationPage.h"
+
+//#if HTML Moved to setup.h
+// #include "notFoundPage.h"
+// #include "testPage.h"
+// #include "rootPage.h"
+// #include "stationPage.h"
+//#if INFO_PAGE
+//	#include "infoPage.h"
+//#endif
+//#endif
+
 #include "setup.h"
 #include "metars.h"
-
 
 
 void setup(void) {
@@ -76,8 +81,10 @@ void setup(void) {
 	setupBigBlock();
 	setupAirportString();
 	setupConnection();
+#if HTML
 	setupmDNS();
 	setupServer();
+#endif
 	setupLEDString();
 }
 
@@ -89,8 +96,11 @@ void setup(void) {
 
 void loop(void) {
   static unsigned int testTime = loop_time;    // delay for test() leds
+
+#if HTML
   server.handleClient();
   MDNS.update();
+#endif
 
   if ( timeElapsed() ) {                  	// Do every second
      switch(my_Event){
@@ -114,11 +124,16 @@ void loop(void) {
        break;
 
        case MY_WXUPDATE:{
-    	   server.close();                     // Stop clients from locking up the 4 available connections
+    	   /* TODO find some way to remove #if blocks possibly to a function or macro my_server(true) */
+#if HTML
+server.close();                     // Stop clients from locking up the 4 available connections
+#endif
          loop_time = loopLEDSectional();     // Return allows loop time to be adjusted for WX GET failures
          testTime = loop_time;               // When loop_time overflows the next test may be delayed
          my_Event = MY_LED_REFRESH;
+#if HTML
          server.begin();                     // Restart Service
+#endif
        }
        break;
 

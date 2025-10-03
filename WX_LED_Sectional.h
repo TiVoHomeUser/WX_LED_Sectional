@@ -10,9 +10,10 @@
 #include <ESP8266WiFi.h>
 #endif
 
+#if HTML
 #include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
-
+#endif
 
 //#define WXSERVER "www.aviationweather.gov"
 //#define BASE_URI "/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="

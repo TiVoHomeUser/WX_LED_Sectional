@@ -53,13 +53,6 @@ void setupConnection(void){
   Serial.println(WiFi.localIP());
 }
 
-void setupmDNS(void){
-  if (MDNS.begin(hostname)) {
-    Serial.print(F("MDNS responder started http://"));
-    Serial.print(hostname);  Serial.println(F(".local"));
-  }
-}
-
 void setupBuiltInLED(void){
 	  pinMode(LED_BUILTIN, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
 	  digitalWrite(LED_BUILTIN, HIGH);  // Off
@@ -73,6 +66,13 @@ void setupSerial(void){
 }
 
 #if HTML
+
+void setupmDNS(void){
+  if (MDNS.begin(hostname)) {
+    Serial.print(F("MDNS responder started http://"));
+    Serial.print(hostname);  Serial.println(F(".local"));
+  }
+}
 
  #define INFO_PAGE	true		        // include /info html page off by default to conserve memory
 

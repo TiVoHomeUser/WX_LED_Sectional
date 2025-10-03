@@ -71,13 +71,24 @@ void rootPage(){
                        }
 #endif // DEBUG
                        server.sendContent(F("</h4><p>\n"));
-
+#if INFO_PAGE
  server.sendContent(F( "<h5 align=\"center\"> "
                        "<a href=\"stationsL\">Stations: Desktop,</a>&nbsp;&nbsp;&nbsp;&nbsp;"
                        "<a href=\"stationsW\"> Mobile Wide,</a>&nbsp;&nbsp;&nbsp;&nbsp;"
                        "<a href=\"stationsN\"> Mobile Narrow</a></h5>\n"
                        "<p></p><p style=\"padding-top:15px;text-align:center\">"
-                       "<a href=\"test\"> Test</a></p>\n"));
+                       "<a href=\"test\"> Test</a></p>\n"
+		 	 	 	   "<a href=\"info\"> i</a></p>\n"
+		 ));
+#else
+ server.sendContent(F( "<h5 align=\"center\"> "
+                       "<a href=\"stationsL\">Stations: Desktop,</a>&nbsp;&nbsp;&nbsp;&nbsp;"
+                       "<a href=\"stationsW\"> Mobile Wide,</a>&nbsp;&nbsp;&nbsp;&nbsp;"
+                       "<a href=\"stationsN\"> Mobile Narrow</a></h5>\n"
+                       "<p></p><p style=\"padding-top:15px;text-align:center\">"
+                       "<a href=\"test\"> Test</a></p>\n"
+		 ));
+#endif
                        
 #if USE_LIGHT_SENSOR
   server.sendContent(F("<h4 align=\"center\" style=\"color:lighttgray;margin:20px;\">\n"));

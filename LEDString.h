@@ -112,6 +112,8 @@ void adjustBrightness() {
     FastLED.show();
 }  // adjustBrightness()
 
+/* TODO */ // Move to slider.h or rootPage LEDs should not know about HTML pages
+#if HTML
 /*
  *
  *                                                Slider
@@ -152,6 +154,7 @@ void slider_page(){
   server.client().stop();
 }
 
+#endif
 
 /*
  *                                          idLED()
@@ -200,7 +203,6 @@ void idLED(byte led_number) {
     idLED();  // make first call the rest are done from main loop
   }
 }
-
 
 
  /*
