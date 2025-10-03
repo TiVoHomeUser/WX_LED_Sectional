@@ -24,8 +24,8 @@ New setup for Arduino for TiVoHomeUser WX_LED_Sectional on Windows 11 Pro
  - Tools -> Board -> ESP8266 -> “LOLIN(WEMOS) D1 mini Lite”
 
  - Tools -> Manage Library	Find and install 2 libraries
-	WiFiManager			by tzapu
-	FastLED			by Daniel Garcia
+   - WiFiManager			by tzapu
+   - FastLED			by Daniel Garcia
 
  - Paste the unzipped WX_LED_Sectional folder somewhere I put it in Documents/Arduino folder
  -  From Arduino IDE -> file -> Open WX_LED_Sectional.
