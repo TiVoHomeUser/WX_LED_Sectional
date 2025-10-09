@@ -514,6 +514,7 @@ int loopLEDSectional() {
   if (retVal < 0) retVal = 0; // JIC
   if(cycleErrCount > CONNECTION_ERR_RRBOOT){
 	  Serial.println(F("Too many connection errors forcing reset"));
+	  softboot(true, &lightOffset);	// save soft reboot flag
 	  m_reset();
   }
   return retVal;      // new loop_time

@@ -63,8 +63,8 @@ void setupLEDString(void){
  * 		I tested with an Analog sensor from the package of 10 Gowoops ZZ20161810
  *
  */
-static signed short lightOffset = LIGHT_OFFSET; // get from user_settings
-static signed short brightness;		 // needs to work with '-' numbers
+static int8_t lightOffset = LIGHT_OFFSET; // get from user_settings
+static int16_t brightness;		 // needs to work with '-' numbers
 void adjustBrightness() {
     float reading;
 

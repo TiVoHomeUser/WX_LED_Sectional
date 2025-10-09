@@ -56,31 +56,23 @@ const unsigned int loop_interval = WX_REFRESH_INTERVAL * 60;    // How often to 
 unsigned int loop_time = loop_interval;                         // Force WX update first loop
 // Not really 'c' header files break up this .ino file into smaller sections still accessible by the Arduino IDE
 #include "utilities.h"
-
-
 #include "LEDString.h"
-
-//#if HTML Moved to setup.h
-// #include "notFoundPage.h"
-// #include "testPage.h"
-// #include "rootPage.h"
-// #include "stationPage.h"
-//#if INFO_PAGE
-//	#include "infoPage.h"
-//#endif
-//#endif
-
 #include "setup.h"
 #include "metars.h"
 
 
 void setup(void) {
 	delay(100);			// some boards are unstable
-	setupBuiltInLED();
 	setupSerial();
+
+	if(true == softboot(false, &lightOffset)){
+		my_Event = MY_WXUPDATE;
+	}
+	setupBuiltInLED();
 	setupBigBlock();
 	setupAirportString();
 	setupConnection();
+
 #if HTML
 	setupmDNS();
 	setupServer();

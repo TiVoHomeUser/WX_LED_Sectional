@@ -263,4 +263,66 @@ static unsigned int m_hours, m_days;
     unsigned int cycleCount = 0;     // for debug count the number of downloads since last reboot
     unsigned int cycleErrCount = 0;  // for debug count the number of failed downloads since last reboot
 
+/*
+ *    Reboot check don't test LEDS and set LED brightness 
+ *    // Structure to store data in RTC memory
+ *    call with
+ *    	true:
+ *    		 Save rtcData currently magic_number and light_offset
+ *    		 save
+ *    	false:
+ *    		check for softBoot (magic number)
+ *    			clear magic number
+ *    			returns
+ *    				true:  soft boot
+ *    				false: hardware boot
+ *    				lightOffset value changed with saved value
+ *
+ *
+ */
+//#define MAGIC_REBOOT_FLAG 0xDEADBEEF
+#define MAGIC_REBOOT_FLAG 0xB003		// max 16 bits
+#define RTC_OFFSET 32               	// Starting location to save data
+    									// Could be 0 there is no conflict with WiFiManger
+
+static struct{
+	uint16_t magic_number;
+	int8_t light_Offset;
+    } rtcData;
+
+boolean softboot(boolean setSoftBoot, int8_t *lightOffset ){
+	 if(setSoftBoot){					// Save magic_number and offset
+		 rtcData.magic_number = MAGIC_REBOOT_FLAG;
+		 rtcData.light_Offset = *lightOffset;
+		 ESP.rtcUserMemoryWrite(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
+		 return true;
+	 } else {							// Check magic+number
+		  ESP.rtcUserMemoryRead(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
+		  if (rtcData.magic_number == MAGIC_REBOOT_FLAG) {
+		    *lightOffset=rtcData.light_Offset;		//	return value of offset
+		    rtcData.magic_number = 0;	// Reset magic_number flag so it doesn't trigger on subsequent reboots
+		    ESP.rtcUserMemoryWrite(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
+		    return true;
+		  } else {						// Normal boot or power-on reset
+		    return false;
+		  }
+	 }
+ }
+/*
+ * 	Use to aid in checking for conflicting storage
+ */
+//void dumpRtcMemory() {
+//  const int totalWords = 128;  // 512 bytes / 4 bytes per word
+//  uint32_t buf[totalWords];
+//
+//  if (ESP.rtcUserMemoryRead(0, buf, sizeof(buf))) {
+//    Serial.println("\nRTC User Memory Dump:");
+//    for (int i = 0; i < totalWords; i++) {
+//      Serial.printf("Offset %3d (byte %3d): 0x%08X\n", i, i * 4, buf[i]);
+//    }
+//  } else {
+//    Serial.println("Failed to read RTC memory.");
+//  }
+//}
+
 #endif
