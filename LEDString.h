@@ -124,7 +124,7 @@ void slider(){
     server.sendContent(F("<h3 align=\"center\" ><form action=\"/sliderpage\" id=\"numform\" oninput=\"x.value=parseInt(a.value)\">\n"
                          "<input type=\"range\" id=\"a\" name=\"a\" value=\""));
     server.sendContent( b2Scs(lightOffset) ); // convert signed short to c-string
-    server.sendContent(F("\" max=\"128\" min=\"-128\" >\n"
+    server.sendContent(F("\" max=\"127\" min=\"-128\" >\n"
                          "<br>\n"
                          "<input type=\"submit\">\n"
                          "</form>\n"
@@ -147,7 +147,7 @@ void slider_page(){
     svalue = server.arg("a").toInt();
     Serial.println(svalue);
     // FastLED.setBrightness(svalue);   // scale  a 0-255 value for how much to scale all LEDs before writing them out
-    lightOffset = svalue;   // Slide value -128 ... 128
+    lightOffset = svalue;   // Slide value -128 ... 127
   }
   //const static char goBack[] PROGMEM = "<!DOCTYPE html> <script language=\"JavaScript\" type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\",10); </script>";
   server.send(200, "text/html", goBack);    // goBack string stored in PROGMEM declared in WX_Sectional.h A it is used in 2 functions iDLED and Slider_page

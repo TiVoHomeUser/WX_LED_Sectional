@@ -30,6 +30,10 @@
  * 2024/06/12
  * 		Removed months and seconds from Up time display rootpage.h and utilites.h
  * 		added error count display on rootpage when there are connection error(s)
+ *
+ * 2025/10/0
+ * Soft boot using "Magic Number" to skip LED test
+ *
  */
 #include "Arduino.h"
 

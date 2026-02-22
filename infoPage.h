@@ -9,7 +9,6 @@
 #define INFOPAGE_H_
 
 void infoPage(void){
-
 	  Serial.print(F("Info Page     \tClient IP = "));
 	  Serial.print(server.client().remoteIP().toString());
 	  Serial.print(F("\tWiFi SSID: ")); Serial.println(WiFi.SSID());
@@ -47,7 +46,7 @@ void infoPage(void){
       server.sendContent(b2Scs(cycleCount)); //String(cycleCount).c_str());
       server.sendContent(F(" / ")); server.sendContent(b2Scs(cycleErrCount)); //String(cycleErrCount).c_str());
       server.sendContent("<BR>");
-showFree(true);
+//showFree(true);
       //if ( force || (ESP.getHeapFragmentation() >= 50) || (ESP.getFreeHeap() < 1000) ) {
         server.sendContent(F("\n\tFree Heap = ")); server.sendContent(b2UScs(ESP.getFreeHeap()));	//uint32_t
         server.sendContent("<BR>");

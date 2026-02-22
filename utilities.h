@@ -257,8 +257,8 @@ static unsigned int m_hours, m_days;
     // goBack now used only once in testPage idLED and eprom red was used in Station page for out of memory message
     const char goBack[] PROGMEM = "<!DOCTYPE html> <script language=\"JavaScript\" type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\",10); </script>";
 
-    const char ooMem[] = "WX Out of Memory";   // This message is pointed to after the bigBlock array is full
-    const char offLine[] = "Off-Line";         // Used if station does not return value
+    const char ooMem[] PROGMEM = "WX Out of Memory";   // This message is pointed to after the bigBlock array is full
+    const char offLine[] PROGMEM = "Off-Line";         // Used if station does not return value
 
     unsigned int cycleCount = 0;     // for debug count the number of downloads since last reboot
     unsigned int cycleErrCount = 0;  // for debug count the number of failed downloads since last reboot
