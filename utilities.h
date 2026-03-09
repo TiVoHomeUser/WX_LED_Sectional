@@ -258,7 +258,8 @@ static unsigned int m_hours, m_days;
     const char goBack[] PROGMEM = "<!DOCTYPE html> <script language=\"JavaScript\" type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\",10); </script>";
 
     const char ooMem[] PROGMEM = "WX Out of Memory";   // This message is pointed to after the bigBlock array is full
-    const char offLine[] PROGMEM = "Off-Line";         // Used if station does not return value
+    const char offLine[] = "Off-Line";          // Used if station does not return value
+                                                // NOTE: using PROGMEM cause a trap when Off-Line is coppied
 
     unsigned int cycleCount = 0;     // for debug count the number of downloads since last reboot
     unsigned int cycleErrCount = 0;  // for debug count the number of failed downloads since last reboot
@@ -288,7 +289,7 @@ static unsigned int m_hours, m_days;
 static struct{
 	uint16_t magic_number;
 	int8_t light_Offset;
-    } rtcData;
+    } __attribute__((aligned(4))) rtcData;
 
 boolean softboot(boolean setSoftBoot, int8_t *lightOffset ){
 	 if(setSoftBoot){					// Save magic_number and offset
