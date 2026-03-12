@@ -1,8 +1,7 @@
 #ifndef WX_Led_Sectional_ino
 #define WX_Led_Sectional_ino "Jan 2, 2021"
 
-#define WX_DEBUG false		      // Extra output to Serial.print port
-#define DEBUG    false            // Debug for memory tracing
+#define WX_DEBUG false		      // Extra station output to Serial.print port
 
 #if AUTOCONNECT
 #include <WiFiManager.h>
@@ -15,26 +14,8 @@
 #include <ESP8266WebServer.h>
 #endif
 
-//#define WXSERVER "www.aviationweather.gov"
-//#define BASE_URI "/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
 #define WXSERVER "aviationweather.gov"
-
-// 09/2025 #define BASE_URI "/cgi-bin/data/dataserver.php?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
-// *** NEW 9/25
 #define   BASE_URI "/api/data/dataserver?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
-// ***
-
-//#define BASE_URI "/api/data/metar?taf=false&hours=1&ids="
-/* Work exp Needs CK not just K
-	https://aviationweather.gov/api/data/metar?taf=false&mostRecent=true&ids=%2CKDTW%2CKYIP%2CKDET
- Or
-	https://aviationweather.gov/api/data/metar?taf=false&hours=3&mostRecent=true&ids=%2CKDTW%2CKYIP%2CKDET
-*/
-//https://aviationweather.gov/cgi-bin/data/dataserver.php?requestType=retrieve&dataSource=metars&stationString=KMCI%2CKORD%2CKBOS&hoursBeforeNow=3&format=xml&mostRecent=true
-// NEW  https://aviationweather.gov
-//  /api/data/metar?ids=KMCI%2CKORD%2CKBOS&taf=false&hours=3
-
-#define my_yield() {ESP.wdtFeed(); yield();}     // reported problems with yield() not always reseting the software watchdog timer
 
 int retVal;		// To save memory used everywhere
 
@@ -62,13 +43,16 @@ typedef struct mtrs {
   byte mtrgusts;        // Used for html button display quicker to check by led number instead of comparing an entire vector entry's for every led
   boolean mtrlighting;  // Used for html button display quicker to check by led number instead of comparing an entire vector entry's for every led
   const char* rawText;
-} mtrs;
+} __attribute__((aligned(4))) mtrs;
 mtrs mtrsf[NUM_AIRPORTS];
 
 #define READ_TIMEOUT 15 // Cancel query if no data received (seconds)
 #define RETRY_TIMEOUT 2 * 60 //110 // Seconds before attempting connection again on failure
 
-std::vector<unsigned short int> lightningLeds;
+#define MAX_LIGHTNING 20
+static unsigned short int lightningLeds[MAX_LIGHTNING];
+static byte lightningLedsCount = 0;
+
 static byte ooMemCnt;
 
 

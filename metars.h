@@ -1,8 +1,33 @@
 #ifndef metars_ino
-#define metars_ino "Sept 14, 2021"
+#define metars_ino "Feb 21, 2026"
 // 2021/09/14 Fix for station's Button can display last metar conditions after a station goes off-line  V.W>
+// 2026/02/21 static client hopfully prevent memory fragmentation
 
-#define DEBUG1 false  // track chars used in parser line buffer 
+/* ============================================================================
+ *  Reusable SSL client (prevents memory fragmentation)
+ * ============================================================================
+ */
+static BearSSL::WiFiClientSecure* wxClient = nullptr;
+
+// In metars.h — replace initWxClient() with this:
+void resetWxClient() {
+  if (wxClient != nullptr) {
+    wxClient->stop();
+    delete wxClient;
+    wxClient = nullptr;
+  }
+  wxClient = new BearSSL::WiFiClientSecure();
+  wxClient->setInsecure();
+  wxClient->setTimeout(8000);
+}
+
+void initWxClient() {
+  if (wxClient == nullptr) {
+    wxClient = new BearSSL::WiFiClientSecure();
+    wxClient->setInsecure();
+    wxClient->setTimeout(8000);
+  }
+}
 
   void doColor(char* identifier, unsigned short int led, int wind, int gusts, char* condition, char* wxstring, const char* rawText){
 #if WX_DEBUG
@@ -27,7 +52,7 @@
 #endif
   if (strstr(wxstring, "TS") != NULL) {
     Serial.println(F("... found lightning!"));
-    lightningLeds.push_back(led);
+    if(lightningLedsCount < MAX_LIGHTNING) lightningLeds[lightningLedsCount++] = led;
     mtrsf[led].mtrlighting = true;         // For Button to display lighting
   }
 
@@ -61,8 +86,6 @@
   mtrsf[led].mtrgusts = gusts;
   mtrsf[led].rawText = rawText;
   total_C_StringLen += strlen(rawText);
-  // TODO FastLED.show(); // Kid of cool update display as each down-loaded
-  // Note: causes the ones not loaded to go black and may be annoying
 } // doColor()
 
 // in good weather currentLine length = 220 I was getting much larger values when weather was bad b4 isAscii check was added
@@ -102,11 +125,6 @@ static char currentLine[CURLINESIZE]; // Working buffer used for collecting the 
 static char currentWxstring[26]; // Wx notes TS -SN RA ...
 
 bool getMetars() {
-
-#if	DEBUG1
-	static int maxlncnt=0;	// Test to configure the max size to allocate for the line processing buffer
-#endif
-
   total_C_StringLen = 0;
   boolean maxexcd = false;  // For debugging c-string size
 
@@ -118,7 +136,8 @@ bool getMetars() {
 	  }
   }
 
-  lightningLeds.clear(); // clear out existing lightning LEDs since they're global
+  lightningLedsCount = 0; // clear out existing lightning LEDs since they're global
+
   fill_solid(leds, NUM_AIRPORTS, CRGB::Black); // Set everything to black just in case there is no report
 
   char c;
@@ -127,10 +146,7 @@ bool getMetars() {
   unsigned short int en;
   uint32_t t;
   uint32_t gtimeout;
-  //std::vector<unsigned short int> led;  // Why? led is only used as a holder to pass a single integer
   int led = -1;                           // becomes the value for the string led currently being processed each loop
-  //String currentAirport = "";   // char[5];
-  //char* currentAirport = new char[6 * sizeof(char)];
 
   int cnt = 0;    // used as index for
   currentAirport[cnt] = '\0';
@@ -140,43 +156,33 @@ bool getMetars() {
   currentWxstring[cnt] = '\0';
   int lncnt = 0;
   currentLine[lncnt] = '\0';
-//ooMemCnt = 0;   // counter for the number of stations getting the Out Of Memory message
+
   const char* rawText = &bigBlock[firstAvailable]; // Pointer for the next substring thats added to airport structure
   int counter = firstAvailable;       // start of wx raw text
   // AirportString =
   // {KBEH,KLWA,KAZO,KBTL,KRMY,KHAI,KIRS,KOEB,KJYM,KADG,KUSE,KTOL,KDUH,KTDZ,KPCW,KTTF,KARB,KYIP,KDTW,KONZ,KDET,KVLL,KMTC,KPHN,KD95,KPTK,KFNT,KRNP,KOZW,KTEW,KJXN,KFPK,
   //  KLAN,KY70,KGRR,KBIV,KMKG,KFFX,KRQB,KLDM,KMBL,KFKS,KCAD,KTVC,KACB,KCVX,KMGN,KPLN,KMCD,KSLH,KPZQ,KAPN,KOSC,KBAX,KCFS,KHYX,KMBS,KIKW,KAMN,KMOP,KY31,KHTL,KGOV,KGLR}
   Serial.print(F("GetMetars\t"));
+  initWxClient();  // Create client if not exists (first boot only)
 
-#if DEBUG
-  showFree(true);
-#endif
-
-  BearSSL::WiFiClientSecure client;
-  client.setInsecure();
-  //Serial.println(F("\nStarting connection to server..."));
-  client.setTimeout(8000);
-
-  if (!client.connect(WXSERVER, 443)) {
-    char str[81]; str[0] = '\0'; // For return of the SSLError results
-#if DEBUG
-    showFree(true);
-#endif
-    Serial.print(F("Connection failed! : ")); Serial.println(client.getLastSSLError(str, 80)); Serial.println(str); //Serial.println(strlen(str));
-    client.stop();
-    return false;
-  }
-
-  t = millis(); // start time
-  while (!client.connected()) {
-    if ((millis() - t) >= (READ_TIMEOUT * 1000)) {
-      Serial.println(F("---Timeout---"));
-      client.stop();
+  // Only connect if not already connected. Reusing the existing SSL session
+  // avoids the BearSSL handshake heap churn that causes fragmentation.
+  if (!wxClient->connected()) {
+    Serial.print(F("(Re)connecting SSL... "));
+      // Must reset the BearSSL context — reconnecting on a stale object
+      // causes BR_ERR_BAD_STATE ("unknown error") after server-initiated close
+    resetWxClient();
+    if (!wxClient->connect(WXSERVER, 443)) {
+      char str[81]; str[0] = '\0';
+      Serial.print(F("Connection failed! : ")); Serial.println(wxClient->getLastSSLError(str, 80)); Serial.println(str);
+      // wxClient->stop();
+      // delay(200);
+      // my_yield();
       return false;
-    } else {
-      Serial.print(F("."));
-      delay(1000);
     }
+    Serial.println(F("connected."));
+  } else {
+    Serial.println(F("Reusing SSL session."));
   }
   // if you get a connection, report back via serial:
   FastLED.clear();    // Clears leds[] reset only once for all group(s) of downloads
@@ -187,53 +193,55 @@ bool getMetars() {
 
     rawText = &bigBlock[counter]; // Pointer for substring to add to airport structure
 
+    // For batch 2+, server may have closed the Keep-Alive connection. Reconnect if needed.
+    if (!wxClient->connected()) {
+      Serial.print(F("Reconnecting for batch ")); Serial.println(wxLoopCnt + 1);
+      if (!wxClient->connect(WXSERVER, 443)) {
+        Serial.println(F("Reconnect failed"));
+        resetWxClient();
+        //wxClient->stop();
+        //delay(200);
+        //my_yield();
+        return false;
+      }
+    }
+
     Serial.println(F("Connected ..."));
 
-    //  Serial.print(F("GET ")); Serial.print(BASE_URI); Serial.print(airportStrings[wxLoopCnt]); Serial.println(F(" HTTP/1.1")); Serial.print(F("Host: ")); Serial.println(WXSERVER);
-    //  client.print(F("GET ")); client.print(BASE_URI); client.print(airportStrings[wxLoopCnt]); client.println(F(" HTTP/1.1")); client.print(F("Host: ")); client.println(WXSERVER);
-    // NEW 9/2025
-    //    Serial.print(F("GET ")); Serial.print(BASE_URI); Serial.println(airportStrings[wxLoopCnt]); //Serial.println(F("&format=xml"));
-    //    Serial.print(F("Host: ")); Serial.println(WXSERVER);
-    //    client.print(F("GET ")); client.print(BASE_URI); client.print(airportStrings[wxLoopCnt]); //client.println(F("&format=xml"));
-    //    client.print(F("Host: ")); client.println(WXSERVER);
-
 #if WX_DEBUG
-    Serial.print("GET ");
+    Serial.print(F("GET "));
     Serial.print(BASE_URI);
     Serial.println(airportStrings[wxLoopCnt]);
-    Serial.println(" HTTP/1.1");
-    Serial.print("Host: ");
+    Serial.println(F(" HTTP/1.1"));
+    Serial.print(F("Host: "));
     Serial.println(WXSERVER);
-    Serial.println("User-Agent: LED Sectional Client");
-    //Serial.println("Connection: close");
+    Serial.println(F("User-Agent: LED Sectional Client"));
     Serial.println();
     Serial.flush();
-my_yield();
+    my_yield();
 #endif
 
 
-    client.print("GET ");
-    client.print(BASE_URI);
-    client.print(airportStrings[wxLoopCnt]);
-    client.println(" HTTP/1.1");
-    client.print("Host: ");
-    client.println(WXSERVER);
-    client.println("User-Agent: LED Sectional Client");
+    wxClient->print(F("GET "));
+    wxClient->print(BASE_URI);
+    wxClient->print(airportStrings[wxLoopCnt]);
+    wxClient->println(F(" HTTP/1.1"));
+    wxClient->print(F("Host: "));
+    wxClient->println(WXSERVER);
+    wxClient->println(F("User-Agent: LED Sectional Client"));
     if (wxLoopCnt < (noOfAirportStrings - 1)) { // Request keep connection open
       Serial.println(F("Connection: Keep-Alive"));
-      client.println(F("Connection: Keep-Alive"));
+      wxClient->println(F("Connection: Keep-Alive"));
     } else {                               // Request close connection
       Serial.println(F("Connection: close"));
-      client.println(F("Connection: close"));
+      wxClient->println(F("Connection: close"));
     }
-    //client.println("Connection: close");
-    client.println();		// seems to be important does not get data without this
-    client.flush();
+    wxClient->println();		// seems to be important does not get data without this
+    wxClient->flush();
 
     gtimeout = millis() + (20 * 60 * 1000);
-    while (!client.available() && gtimeout > millis()) {
+    while (!wxClient->available() && gtimeout > millis()) {
       my_yield();
-      //delay(10);
       ;;
     }
 /*
@@ -297,10 +305,28 @@ my_yield();
     */
     short ic;		//	Not sure how Arduino handles chars do it the safe way
     //int overflow = 0;
-    client.find("METAR");	// Skip through a large chunk of the buffer
+    // Manual find - avoids Stream::find() hidden heap allocation
+    {
+      const char target[] = "METAR";
+      const byte tlen = 5;
+      byte matched = 0;
+      uint32_t findTimeout = millis() + (READ_TIMEOUT * 1000);
+      while (millis() < findTimeout) {
+        if (wxClient->available()) {
+          char fc = (char)wxClient->read();
+          if (fc == target[matched]) {
+            if (++matched == tlen) break;
+          } else {
+            matched = (fc == target[0]) ? 1 : 0;
+          }
+        } else {
+          my_yield();
+        }
+      }
+    }
 
-    while (client.available()) {
-      if ((ic = client.read()) >= 0){
+    while (wxClient->available()) {
+      if ((ic = wxClient->read()) >= 0){
     	  c = (char) ic;
     	  if (isAscii(c)) {
           my_yield(); // Otherwise the WiFi stack can crash
@@ -309,21 +335,10 @@ my_yield();
           } else {
         	  //Serial.print(F("Exceeded line size by ")); Serial.println(overflow++);
         	  Serial.println(F("Line LBOF"));
-#if !DEBUG1
             lncnt = 0;              // Reset buffer to get additional as buffer already processed
         	  currentLine[lncnt] = '\0';
-#endif
           }
-
-#if DEBUG1
-          if(lncnt > maxlncnt){
-        	  maxlncnt = lncnt;
- //       	  Serial.print("Max Line count = "); Serial.println(maxlncnt); // currently 997
-          }
-#endif
-
           currentLine[lncnt] = '\0';			// Terminate next char in line for string functions
-        //  if ( '\n' == c || '\r' == c ) {     // Ready for a new line
         if( '\n' == c || '\r' == c || cendsWith(currentLine, "</")){	// Ready for a new line
             lncnt = 0;
             currentLine[lncnt] = '\0';
@@ -464,12 +479,15 @@ my_yield();
           Serial.println(F("---Timeout---"));
           fill_solid(leds, NUM_AIRPORTS, CRGB::Cyan); // indicate status with LEDs
           FastLED.show();
-          client.stop();
+          //wxClient->stop();
+          resetWxClient();
+          delay(200);
+          my_yield();
           return false;
         }
     }	//client.read()
       int na = 500;     // I think I made the string search too fast loop finish b4 next char is received
-      while (!client.available() && na > 0) { // Give some time for the next char to be received
+      while (!wxClient->available() && na > 0) { // Give some time for the next char to be received
         delay(10);
         my_yield();
         na--;
@@ -482,12 +500,6 @@ my_yield();
     }
 
   } // loop loopWxGet
-  client.stop();
-
-#if DEBUG1
-  Serial.print(F("Max Line count = ")); Serial.println(maxlncnt); // currently 997
-#endif
-
   return true;
 } // getMetars()
 
@@ -498,24 +510,43 @@ my_yield();
 
 */
 int loopLEDSectional() {
+  // Heap guard - updated for persistent-SSL memory model:
+  // BearSSL buffers are now kept allocated across cycles so MaxFreeBlockSize
+  // will legitimately read ~6KB and is no longer a useful trigger.
+  // Only reboot on true fragmentation (heap swiss-cheesed beyond recovery)
+  // or if free heap is so low a crash is imminent regardless.
+  uint32_t freeHeap = ESP.getFreeHeap();
+  uint8_t  frag     = ESP.getHeapFragmentation();
+  Serial.print(F("Heap: free=")); Serial.print(freeHeap);
+  Serial.print(F(" frag=")); Serial.print(frag);
+  Serial.print(F(" maxBlock=")); Serial.println(ESP.getMaxFreeBlockSize());
+  if (frag > 60 || freeHeap < 3000) {
+    Serial.print(F("Heap degraded, rebooting. frag="));
+    Serial.print(frag); Serial.print(F(" free=")); Serial.println(freeHeap);
+    boot_reason = b_MemoryFrag;
+    set_softboot(true, &lightOffset, &boot_reason);
+    my_reset();
+  }
+
   retVal = 0;
   Serial.println(F("Getting METARs ..."));
   if (getMetars()) {
     Serial.println(F("Refreshing LEDs."));
     FastLED.show();
-    if (lightningLeds.size() > 0) Serial.println(F("There is lightning"));    // Nice to see there is lightning in the serial monitor at the end of Station output
-    cycleCount++;
+    if (lightningLedsCount > 0) Serial.println(F("There is lightning"));    // Nice to see there is lightning in the serial monitor at the end of Station output
+    cycleCount++; totalCycleCount++;
     if(cycleErrCount > 0) cycleErrCount--;  // Give credit for good connections
   } else {
     retVal = loop_interval - RETRY_TIMEOUT;    // retVal will become loopcount Can't connect to server try again in 110 seconds (event happens when count = time)
     if (cycleErrCount > cycleCount) retVal = retVal - RETRY_TIMEOUT; // Longer delay for excessive errors
-    cycleErrCount++; // count bad connections if too many force reboot
+    cycleErrCount++; totalCycleErrCount++;  
   }
   if (retVal < 0) retVal = 0; // JIC
   if(cycleErrCount > CONNECTION_ERR_RRBOOT){
 	  Serial.println(F("Too many connection errors forcing reset"));
-	  softboot(true, &lightOffset);	// save soft reboot flag
-	  m_reset();
+    boot_reason = b_Connect;
+	  set_softboot(true, &lightOffset, &boot_reason);	// save soft reboot flag
+	  my_reset();
   }
   return retVal;      // new loop_time
 } // loopLedSectional

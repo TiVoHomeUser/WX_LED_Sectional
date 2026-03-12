@@ -69,6 +69,7 @@ char* lEDButton(byte airportnumber){ //unsigned short int airportnumber){
     if(mtrsf[airportnumber].mtrlighting) strcat_P( lB_Retval,  lightingSymb ); //" &#9889;&#9889;"); //" ϟϟ" &#9889; High Voltage (looks light a lighting bolt)                             // +15 chars
     strcat( lB_Retval, "<span class=\"tooltiptext\">");
     strncat( lB_Retval, mtrsf[airportnumber].rawText, RTMAXLN);
+    lB_Retval[lB_RetvalMax - 1] = '\0';  // guarantee termination
     strcat( lB_Retval, "</span></div>");
     strcat( lB_Retval, " <button ");
     strcat( lB_Retval, " type=\"submit\" name='wxid' value='");
@@ -121,9 +122,9 @@ void stationPage(int columns){
                      "<body>"
                      "<h1><a href=\"/\">ESP8266 WX_Sectional LED</a></h1>\n"
                      "<h3>"));
-  if(lightningLeds.size() > 0) server.sendContent_P(lightingSymb);   // Display Lighting symbols in page header
+  if(lightningLedsCount > 0) server.sendContent_P(lightingSymb);   // Display Lighting symbols in page header
   server.sendContent(F(" Stations "));
-  if(lightningLeds.size() > 0) server.sendContent_P(lightingSymb);   // Display Lighting symbols in page header
+  if(lightningLedsCount > 0) server.sendContent_P(lightingSymb);   // Display Lighting symbols in page header
   server.sendContent(F( "</h3>\n"
                         "<form action=\"/wxID\">\n"
                         "<table class=\"center\" border=\"3\">\n"
@@ -137,7 +138,7 @@ void stationPage(int columns){
         row = 1;
         server.sendContent(F("</tr>\n<tr>"));
       }
-    } // else { Serial.print("Null station found "); Serial.println(i); }
+    } // else { Serial.print(F()"Null station found ")); Serial.println(i); }
   };
   server.sendContent(F("</tr>\n"
                        "</table>"
@@ -145,11 +146,6 @@ void stationPage(int columns){
                        "</body>\n"
                        "</html>\n"));
   server.client().stop();
-
-#ifdef DEBUG
-  showFree(true);
-#endif
-
   return; 
 }   // stationPage()
 

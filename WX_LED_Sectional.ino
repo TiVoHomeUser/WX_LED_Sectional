@@ -1,5 +1,5 @@
 
-#define copyright "&#169; Sep 2025 VictorWheeler myapps@vicw.net use, modify and distribute without restrictions"
+#define copyright "&#169; March 2026 VictorWheeler myapps@vicw.net use, modify and distribute without restrictions"
 #define compiledate __DATE__
 /*
  * 	https://github.com/TiVoHomeUser/WX_LED_Sectional
@@ -34,6 +34,15 @@
  * 2025/10/0
  * Soft boot using "Magic Number" to skip LED test
  *
+ * 2026/02/21 BearSSL::WiFiClientSecure client changed to static BearSSL::WiFiClientSecure* WXclient hopefully to prevent memory fragmentation
+ *
+ * 2026/02/28 Removed all vector types (lightningLeds), Refresh now atatic WXClient avery few hours, Softboot for heap fragmentation
+ *   and for the future incBigBlock removed sizeof(char) in case of 32 bit char
+ *
+ *  2026/03/12
+ *    Addidtion of connect totals
+ *    Clean up removing not needed comments and removed DEBUG DEBUG1 compile time configurations
+ * 
  */
 #include "Arduino.h"
 
@@ -41,9 +50,10 @@
 
 #include "WX_LED_Sectional.h"
 
-const char* ssid = STASSID;
-const char* password = STAPSK;
+char* ssid = STASSID;
+char* password = STAPSK;
 const char* hostname = MYHOSTNAME;
+
 
 #if HTML
 ESP8266WebServer server(80);
@@ -64,22 +74,25 @@ unsigned int loop_time = loop_interval;                         // Force WX upda
 #include "setup.h"
 #include "metars.h"
 
-
 void setup(void) {
 	delay(100);			// some boards are unstable
 	setupSerial();
+  
+  if(true == set_softboot(false, &lightOffset, &boot_reason)){
+		my_Event = MY_WXUPDATE;   // Start with update skip LED test
+    Serial.println(F(" SOFT BOOT "));
+  } else {
+    Serial.println(F(" HARD BOOT "));
+  }
 
-	if(true == softboot(false, &lightOffset)){
-		my_Event = MY_WXUPDATE;
-	}
 	setupBuiltInLED();
 	setupBigBlock();
 	setupAirportString();
 	setupConnection();
 
 #if HTML
-	setupmDNS();
 	setupServer();
+	setupmDNS();
 #endif
 	setupLEDString();
 }
@@ -106,10 +119,10 @@ void loop(void) {
        break;
 
        case MY_TEST:{						// Cycle colors all LEDs
-#if WX_DEBUG
-    	   loop_time = loop_interval - 5;	// force update
-    	   my_Event = NO_EVENT;
-#else
+ #if WX_DEBUG
+     	   loop_time = loop_interval - 5;	// force update
+     	   my_Event = NO_EVENT;
+ #else
            // To prevent Software WD timeout test is called from loop 5 times
            if(testTime <= loop_time ){
              test();
@@ -142,7 +155,7 @@ server.close();                     // Stop clients from locking up the 4 availa
        default: {
            toggleBuiltInLED();
            adjustBrightness();                 // Call for light sensor
-           if (DO_LIGHTNING && lightningLeds.size() > 0) {
+           if (DO_LIGHTNING && lightningLedsCount > 0) {
              loop_time++;                      // cuts refresh time between WX updates in half in bad weather
              doLighting();
            }
@@ -154,7 +167,7 @@ server.close();                     // Stop clients from locking up the 4 availa
      } // switch(my_Event)
      loop_time++;   // count the seconds ( 1 loop = about 1 second )
   }
-  // Test for serial data entry. So far only the Flash LED event
+  // Test for serial data entry. Flash LED event and reboot
   if (Serial.available() > 0) {
 	  idLED(getCommand()); // process any input from terminal
   }

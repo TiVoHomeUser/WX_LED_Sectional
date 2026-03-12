@@ -7,34 +7,30 @@ user_settings.ino
 #ifndef USER_INFO_INO
 #define USER_INFO_INO 1
 
-#define INFO_PAGE	false				// include /info html page off by default to conserve memory
-										// really only needed in 2 places
+#define HTML      true      // WX LED Sectional false = LEDs only no Web pages :(
+#define AUTOCONNECT true    // Use WiFi Connection manager with fallback web configuration portal instead of hard-coded SSID and Password
+                            //    Consumes extra 2 to 3K of valuable ram
 
-#define HTML		false				// WX LED Sectional LEDs only no Web pages :(
-#define AUTOCONNECT true          		// Use WiFi Connection manager with fallback web configuration portal instead of hard-coded SSID and Password
-                                  	  	// Consumes extra 2 to 3K of valuable ram
-
-#include "credentials.h"          		// Contains Hostname and WiFi credentials STASSID and STAPSK I don't want to be public
+#include "credentials.h"    // Contains Hostname and WiFi credentials STASSID and STAPSK I don't want to be public
 
 #define CONNECTION_ERR_RRBOOT 15		// Number of connection errors that will force a reboot
 
-#define NUM_AIRPORTS 100                // This is really the number of LEDs not Stations
+#define NUM_AIRPORTS 100            // This is really the number of LEDs not Stations
 
-// FYI using test array 32 = 24, 44 = 32, 60 = 40, 73 = 48, 75 = 50, 86 = 56, 100 = 64,  132 = 96, 136 = 100, 140 = 104
-const static int numOfAirportsGet = 10; //32; //27; //30; //32; // Number of airports to download per loop
-										// New page downloads 1000 bytes per station really need to limit the buffer size until download can be trimmed
+const static int numOfAirportsGet = 32; // Number of airports that are download per loop
+										                    // New page downloads 1000 bytes per station and may need to limit the download buffer size.
 
-#define WX_REFRESH_INTERVAL  15         // Minutes between WX updates
+#define WX_REFRESH_INTERVAL  12         // Minutes between WX updates
 
 #define WIND_THRESHOLD 25               // Maximum wind speed for green, otherwise the LED turns yellow
 #define DO_WINDS true                   // color LEDs for high winds
 #define DO_LIGHTNING true               // Lightning uses more power, but is cool.
 
-#define USE_LIGHT_SENSOR false			// Set USE_LIGHT_SENSOR to true if you're using any light sensor.
+#define USE_LIGHT_SENSOR true			    // Set USE_LIGHT_SENSOR to true if you're using any light sensor.
 #define LIGHT_SENSOR_TSL2561 false		// Set LIGHT_SENSOR_TSL2561 to true if you're using a TSL2561 digital light sensor
-										// false assumes an analog light sensor.
-#define LIGHT_OFFSET 0				 	// Adjust the LED intensity -128 to 128
-										// lightOffset can be changed using the slider on main html page if enabled.
+										                  // false assumes an analog light sensor.
+#define LIGHT_OFFSET 0				 	      // Adjust the LED intensity -128 to 128
+										                  // lightOffset can be changed using the slider on main html page if enabled.
 
 const static char PROGMEM airports[NUM_AIRPORTS][5] = {
   "KBEH", // 1
@@ -137,110 +133,6 @@ const static char PROGMEM airports[NUM_AIRPORTS][5] = {
   "KGOV", // 98
   "NULL", // 99
   "KGLR" // 100
-// Add more For testing
-/*  ,"KORD",
-  "KBHM",
-  "KHSV",
-  "KMGM",
-  "KMOB",
-  "KFSM",
-  "KLIT",
-  "KLCH",
-  "KMSY",
-  "KSHV",   // 110
-  "KJAN",
-  "KCAG",
-  "KOKC",
-  "KTUL",
-  "KBNA",
-  "KMEM",
-  "KTRI",
-  "KTYS",
-  "KABI",
-  "KAMA",   // 120
-  "KBRO",
-  "KCLL",
-  "KCRP",
-  "KDAL",
-  "KDRT",
-  "KELP",
-  "KHOU",
-  "KINK",
-  "KLBB",
-  "KLRD",   // 130
-  "KMRF",
-  "KPSX",
-  "KSAT",
-  "KSPS",
-  "KEYW",
-  "KJAX",
-  "KMIA",
-  "KMLB",
-  "KPFN",
-  "KPIE",   // 140
-  "KTLH",
-  "KATL",
-  "KCSG",
-  "KSAV",
-  "KHAT",
-  "KILM",
-  "KRDU",
-  "KCAE",
-  "KCHS",
-  "KFLO",   // 150
-  "KGSP",
-  "KAXA",
-  "KAMW",
-  "KIKV",
-  "KAIO",
-  "KADU",
-  "KBNW",
-  "KBRL",
-  "KCIN",
-  "KCID",   // 160
-  "KTVK",
-  "KCNC",
-  "KCCY",
-  "KCKP",
-  "KICL",
-  "KCAV",
-  "KCWI",
-  "KCBF",
-  "KCSQ",
-  "KDVN",   // 170
-  "KDEH",
-  "KDNS",
-  "KDSM",
-  "KDBQ",
-  "KEST",
-  "KFFL",
-  "KFXY",
-  "KFOD",
-  "KFSW",
-  "KGGI",   // 180
-  "KHPT",
-  "KHNR",
-  "KDMX",
-  "KIIB",
-  "KIOW",
-  "KIFA",
-  "KBOI",
-  "K65S",
-  "KBYI",
-  "KIDA",   // 190
-  "KSFX",
-  "KTWF",
-  "KTWX",
-  "KCFV",
-  "KDDC",
-  "KLWC",
-  "KOJC",
-  "KTOP",
-  "KICT",
-  "KBIS", // 200
-  "KFAR",
-  "KMOT"  // 202
-  */
 };
 
 

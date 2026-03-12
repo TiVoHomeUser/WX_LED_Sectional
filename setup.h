@@ -14,11 +14,20 @@ void setupConnection(void){
 	  wm.setConfigPortalTimeout(Portal_timeOut); 			// autoConnect function will return, no matter the outcome in xxx seconds
 	  if(wm.getWiFiIsSaved()){
 		  Serial.println(F("============ WiFi Saved ============"));
-		  wm.autoConnect(MYHOSTNAME"_AP");					// SSID for this Access point no password
+      Serial.println(wm.getWiFiSSID());
+      Serial.println(wm.getWiFiPass());
+//		  WiFi.begin(wm.getWiFiSSID(),wm.getWiFiPass());    // use saved credentials directly, no AP = no fragmentation
 	  } else {
 		  Serial.println(F("========= WiFi *NOT* Saved ========="));
-		  WiFi.begin(ssid, password);
+      // wm.autoConnect(MYHOSTNAME"_AP");					// SSID for this Access point no password
+      // Serial.println(wm.getWiFiSSID());
+      // Serial.println(wm.getWiFiPass());
 	  }
+    if(WiFi.status() == WL_WRONG_PASSWORD | WL_NO_SSID_AVAIL){
+      wm.autoConnect(MYHOSTNAME"_AP");					// SSID for this Access point no password
+      Serial.println(wm.getWiFiSSID());
+      Serial.println(wm.getWiFiPass());
+    }
   }
 
 
@@ -36,14 +45,14 @@ void setupConnection(void){
   }
   Serial.println("");
 
-  if(WiFi.status() !=  WL_CONNECTED) m_reset();				// Give up, force reboot
-
-  //	Free Heap = 31600	HeapFragmentation = 6	MaxFreeBlockSize = 29792 OK
-  //	Free Heap = 30224	HeapFragmentation = 26	MaxFreeBlockSize = 22040 !OK
+  if(WiFi.status() !=  WL_CONNECTED) my_reset();				// Give up, force reboot
+  
   showFree(true);
-  if(ESP.getHeapFragmentation() > 12){
+  if(ESP.getHeapFragmentation() > 70){
 	  Serial.println(F("Heap too fragmented reboot forced"));	// Configure AP Access point fragments memory;
-	  m_reset();		// free some memory
+    boot_reason = b_init_MemFrag;
+    set_softboot(true, &lightOffset, &boot_reason);  // ← preserve soft boot flag
+	  my_reset();		// free some memory
   }
 
   Serial.println("");
@@ -75,12 +84,10 @@ void setupmDNS(void){
 }
 
  #define INFO_PAGE	true		        // include /info html page off by default to conserve memory
-
  #include "notFoundPage.h"
  #include "testPage.h"
  #include "rootPage.h"
  #include "stationPage.h"
-
 #if INFO_PAGE
 	#include "infoPage.h"
 #endif
@@ -149,7 +156,7 @@ void setupServer(void){
  // #define bigBlockSize (1024 * 10)
 
 
-static char bigBlock[((sizeof(char) * bigBlockSize) +2)];     // add additional byte for terminator if the last block of data just happens to == bigBlockSize
+static char __attribute__((aligned(4))) bigBlock[((sizeof(char) * bigBlockSize) +2)];     // add additional byte for terminator if the last block of data just happens to == bigBlockSize
 static int firstAvailable = 0;                                // Tracks the next unused location in the bigBlockSize array
 void setupBigBlock(){
   // bigBlock = new char[((sizeof(char) * bigBlockSize) +1)]; // better to allocate memory outside of function that way the block is defined first
@@ -182,9 +189,36 @@ char* airportString = NULL;             // working c-string airports array witho
  */
 void setupAirportString() {
   if (airportString != NULL) {
-    // Serial.println(F("airportString Already setup skipping recreation to prevent memory fragmentation"));
+    // FIX 3: On soft reboot, airportString is non-null (RAM was not cleared)
+    // but airportStrings[] and airportIndex[] are dangling heap pointers from
+    // the previous boot. Re-allocate them here so they are valid.
+    // airportString itself still points into bigBlock which is also valid (static).
+    Serial.println(F("Soft reboot: rebuilding airportStrings pointers"));
+    if (airportStrings != nullptr) { delete[] airportStrings; airportStrings = nullptr; }
+    if (airportIndex   != nullptr) { delete[] airportIndex;   airportIndex   = nullptr; }
+    // Re-compute noOfAirportStrings from already-known actualNumAirports
+    noOfAirportStrings = (int)(((double)actualNumAirports / (double)numOfAirportsGet) + 0.9);
+    if (noOfAirportStrings < 1) noOfAirportStrings = 1;
+    airportStrings = new char*[noOfAirportStrings];
+    airportIndex   = new int[noOfAirportStrings + 1];
+    // Re-point substrings and index into the already-populated bigBlock/airportString
+    airportIndex[0] = 0;
+    int sindex[actualNumAirports];
+    int sidxi = 0;
+    for (int i = 0; i < NUM_AIRPORTS; i++) {
+      if (strncmp_P("NULL", airports[i], 4) != 0) sindex[sidxi++] = i;
+    }
+    airportStrings[0] = airportString;
+    for (int i = 1; i < noOfAirportStrings; i++) {
+      airportStrings[i] = airportString + ((numOfAirportsGet * 5) * i);
+      airportIndex[i]   = sindex[i * numOfAirportsGet];
+    }
+    airportIndex[noOfAirportStrings] = sindex[actualNumAirports - 1];
     return;
   }
+  // else {
+  //   Serial.println(F("airportString == NULL"));
+  // }
 
   // First find the number of stations and compute amount of memory needed to be allocated
   actualNumAirports = 0;    // Actual number of active WX stations without the NULL's
@@ -207,15 +241,8 @@ void setupAirportString() {
 
   // Using pointers create several null terminated sub-strings from airportString
   noOfAirportStrings = (int) ( ( (double) actualNumAirports / (double) numOfAirportsGet) + 0.9);  // number of sub strings needed round up for the last possibly partial line
-  if(noOfAirportStrings < 1) noOfAirportStrings = 1;	 // Got to make some room todo at least one loop
-  airportStrings = new char*[sizeof(char*) * noOfAirportStrings];     // For the pointers into the airportString replace the last ',' with a null creating shorter c_strings
-
-#if DEBUG
-  Serial.print("noOfAirportStrings = "); Serial.print(noOfAirportStrings);
-  Serial.print("\tactualNumAirports = "); Serial.print(actualNumAirports);
-  Serial.print("\tairportStrings size = "); Serial.println(	sizeof(char*) * noOfAirportStrings ); Serial.flush();
-#endif
-
+  if(noOfAirportStrings < 1) noOfAirportStrings = 1;	 // Got to make some room to do at least one loop
+  airportStrings = new char*[noOfAirportStrings];     // For the pointers into the airportString replace the last ',' with a null creating shorter c_strings
   airportIndex = new int[noOfAirportStrings+1];                       // index into the main airports string to limit number of string compares when processing data downloaded using the sub
   airportIndex[0] = 0;                                                // stings. Make +1 because we are starting with 0 and the last location = the end
   int sindex[actualNumAirports];                                      // temp to track and convert string index to substring index

@@ -45,8 +45,6 @@ void testPage(void){
  *
  */
 void iDLED(void){
-//if(server.arg("wxid").toInt() == NULL) Serial.println("NULL");
-//TODO Check for valid integer invalid chars return int 0
   if(server.hasArg("wxid")){
 	unsigned short airportnumber = server.arg("wxid").toInt();
 	if(airportnumber < NUM_AIRPORTS) {
@@ -84,12 +82,15 @@ void iDLED(void){
  *                      Force a reboot by setting high error count
  *                      http://wx_sectional.local/reboot
  */
-void rebootPage(void){
-Serial.println("Reboot page");
-  loop_time = loop_interval - 15;    // Force reboot in 15 seconds
-  cycleErrCount = 99;
-  server.send(200, F("text/html"), goBack);    // goBack string stored in PROGMEM declared in WX_Sectional.h A it is used in 2 functions iDLED and Slider_page
+ void rebootPage(void){
+  Serial.println("Reboot page");
+  server.send(200, "text/html", goBack);    // goBack string stored in PROGMEM declared in WX_Sectional.h A it is used in 2 functions iDLED and Slider_page
+  my_yield();
+  delay(200);
+  boot_reason = b_html;
+	set_softboot(true, &lightOffset, &boot_reason);	// save soft reboot flag
   server.client().stop();
-}
+  my_reset();
+ }
 
 #endif

@@ -63,7 +63,7 @@ void setupLEDString(void){
  * 		I tested with an Analog sensor from the package of 10 Gowoops ZZ20161810
  *
  */
-static int8_t lightOffset = LIGHT_OFFSET; // get from user_settings
+// moved to utilities static int8_t lightOffset = LIGHT_OFFSET; // get from user_settings
 static int16_t brightness;		 // needs to work with '-' numbers
 void adjustBrightness() {
     float reading;
@@ -103,7 +103,7 @@ void adjustBrightness() {
     brightness = brightness + lightOffset;
     if(brightness < 20) brightness = 20;
     if(brightness > 255) brightness = 255;
-//Serial.print(" = LSensor = "); Serial.println(brightness);
+//Serial.print(F(" = LSensor = ")); Serial.println(brightness);
 // 			low    high room
 // DLS 		20 ... 255, 105
 // ALS 		20 ... 234, 162
@@ -112,50 +112,6 @@ void adjustBrightness() {
     FastLED.show();
 }  // adjustBrightness()
 
-/* TODO */ // Move to slider.h or rootPage LEDs should not know about HTML pages
-#if HTML
-/*
- *
- *                                                Slider
- *                                  Make a nice html displayed slider
- *
- */
-void slider(){
-    server.sendContent(F("<h3 align=\"center\" ><form action=\"/sliderpage\" id=\"numform\" oninput=\"x.value=parseInt(a.value)\">\n"
-                         "<input type=\"range\" id=\"a\" name=\"a\" value=\""));
-    server.sendContent( b2Scs(lightOffset) ); // convert signed short to c-string
-    server.sendContent(F("\" max=\"127\" min=\"-128\" >\n"
-                         "<br>\n"
-                         "<input type=\"submit\">\n"
-                         "</form>\n"
-                         "<output form=\"numform\" id=\"x\" name=\"x\" for=\"b\"></output><br>\n </h3>"));
-}
-
-/*
- *
- *                                                      Slider Page
- *                            Called by a HTML page get for program to progress the slider values
- *                            uses goback to return to the calling page
- *
- *
- */
-
-void slider_page(){
-  signed short svalue=0;
-  if(server.hasArg("a")){
-    Serial.print(F("Found value for 'a' "));
-    svalue = server.arg("a").toInt();
-    Serial.println(svalue);
-    // FastLED.setBrightness(svalue);   // scale  a 0-255 value for how much to scale all LEDs before writing them out
-    lightOffset = svalue;   // Slide value -128 ... 127
-  }
-  //const static char goBack[] PROGMEM = "<!DOCTYPE html> <script language=\"JavaScript\" type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\",10); </script>";
-  server.send(200, "text/html", goBack);    // goBack string stored in PROGMEM declared in WX_Sectional.h A it is used in 2 functions iDLED and Slider_page
-  server.client().stop();
-}
-
-#endif
-
 /*
  *                                          idLED()
  *                                        call idLED(LEDNo) first
@@ -163,13 +119,13 @@ void slider_page(){
  *                                  each call toggles ledNo white black until flashLEDCnt is 0
  *                                  on the last call flashLEDCnt == 1 restores ledNo to color saved in lastLED
  */
-static byte ledNo; // flashLEDCnt = 0;  // number of cycles
+static uint8_t ledNo; // flashLEDCnt = 0;  // number of cycles
 static CRGB lastLED; // Prevent memory frag
  #define NO_OF_TIMES 25
 void idLED(){
   static byte flashLEDCnt = NO_OF_TIMES;                                           // number of cycles to flash LED on call to ID
   static boolean flashLEDOn;
-  if(flashLEDCnt > 1){
+  if(flashLEDCnt > 0){
        if(flashLEDOn){
          leds[ledNo] = CRGB::Black; //CHSV(0,0,0);
        }else{
@@ -193,7 +149,7 @@ void idLED(){
  *
  *
 */
-void idLED(byte led_number) {
+void idLED(uint8_t led_number) {
   if (led_number < NUM_AIRPORTS){ // && led_number >= 0) {
     Serial.print(F("Flashing LED #"));
     Serial.println(led_number);
@@ -279,9 +235,6 @@ static char hexval[8];
 char* CRGBtoHex(CRGB c){
   // Removed calls to sprintf they were causing memory fragmentation
   //sprintf(hexval, "#%02X%02X%02X",c.r,c.g,c.b);
-  //Serial.print("\nTo Hex  ");
-  //Serial.print(hexval);
-
   hexval[0] = '#';
   hexval[1] = '\0';
   strncat(hexval, byteToHex(c.r), 2);
@@ -295,13 +248,11 @@ char* CRGBtoHex(CRGB c){
               Process Lighting flash the LED(s) about once a second (every loop)
               Moved outside of LEDSectional allowing increase of the LED lighting flash rate without flooding the WX server.
 
-
 */
 void doLighting() {
-  // TODO Using vector may be causing memory fragmentation need to investigate
-  if (DO_LIGHTNING && lightningLeds.size() > 0) {
-    std::vector<CRGB> lightning(lightningLeds.size());
-    for (unsigned short int i = 0; i < lightningLeds.size(); ++i) {
+  if (DO_LIGHTNING && lightningLedsCount > 0) {
+    CRGB lightning[lightningLedsCount];
+    for (unsigned short int i = 0; i < lightningLedsCount; ++i) {
       unsigned short int currentLed = lightningLeds[i];
       lightning[i] = leds[currentLed]; 	// temporarily store original color
       leds[currentLed] = CRGB::White; 	// set to white briefly
@@ -309,7 +260,7 @@ void doLighting() {
     delay(25); my_yield(); 				// extra delay seems necessary with light sensor
     FastLED.show();
     delay(75); my_yield();
-    for (unsigned short int i = 0; i < lightningLeds.size(); ++i) {
+    for (unsigned short int i = 0; i < lightningLedsCount; ++i) {
       unsigned short int currentLed = lightningLeds[i];
       leds[currentLed] = lightning[i]; 	// restore original color
     }

@@ -37,32 +37,7 @@ boolean timeElapsed() {
   return false;
 }
 
-/*
- *                     getCommand()
- *          gets numeric input from the serial console
- *          returns
- *            integer value of the char or chars received
- *            -1 no numeric values received
- *          ignores non numeric chars
- *
- *          Changed to use Serialevent much cleaner way to get input
- */
-int getCommand() {
-  //   static int retval; now using global retVal
-  retVal = 0;        // Accumulate single digits
-  char rx_byte = 0;     // for input from serial monitor
-  while (Serial.available() > 0) {    // is a character available?
-    rx_byte = Serial.read();       // get a character
-    // Sanity check
-    if ((rx_byte >= '0') && (rx_byte <= '9')) {
-      retVal = (retVal * 10);
-      retVal = retVal + (int) (rx_byte - '0');
-    }
-    delay(10); // allow next byte to collect important will not collect all values without a delay
-    my_yield();
-  } // end: while (Serial.available() > 0)
-  return retVal;
-}
+#define my_yield() {ESP.wdtFeed(); yield();}     // reported problems with yield() not always reseting the software watchdog timer
 
 /*
  *
@@ -72,6 +47,7 @@ int getCommand() {
  */
 static char buf[7];
 char* b2Scs(signed short b){
+  buf[0]='\0';
   itoa(b, buf,10);
   return buf;
 }
@@ -83,6 +59,7 @@ char* b2Scs(signed short b){
  *
  */
 char* b2UScs(unsigned short b){
+  buf[0]='\0';
   itoa(b, buf,10);
   return buf;
 }
@@ -96,10 +73,33 @@ char* b2UScs(unsigned short b){
  */
 //static char buf[4]; reuse b2Scs buf
 char* b2cs(byte b){
+  buf[0]='\0';
   itoa(b, buf,10);
   return buf;
 }
 
+/*
+ *
+ *                  Format unsigned long to Gbytes, Kbytes, Mbytes, or bytes
+ */
+// TODO optimize to minimize ram memory usage sprintf ?
+// Maybe formatted output not needed if consuming too much resorces 
+ static char buffer[25];
+char* formatBytes(unsigned long bytes) {
+    buffer[0]='\0';
+    const char *units[] = {"bytes", "Kbytes", "Mbytes", "Gbytes"};
+    int i = 0;
+    double dBytes = (double)bytes;
+
+    // Determine the unit (K, M, G)
+    while (dBytes >= 1024 && i < 3) {
+        dBytes /= 1024;
+        i++;
+    }
+    // Format with 2 decimal places and append unit
+    snprintf(buffer, sizeof(buffer), "%.2f %s", dBytes, units[i]);
+    return buffer;
+}
 
 /*
  *
@@ -159,7 +159,7 @@ void showFree(boolean force) {
     Serial.print(F("\n\tFree Heap = ")); Serial.print(ESP.getFreeHeap());
     Serial.print(F("\tHeapFragmentation = ")); Serial.print(ESP.getHeapFragmentation());
     Serial.print(F("\tMaxFreeBlockSize = ")); Serial.println(ESP.getMaxFreeBlockSize());
-    // Serial.print("Free = "); Serial.println(ESP.freeMemory());
+    // Serial.print(F()"Free = ")); Serial.println(ESP.freeMemory());
   }
 }
 
@@ -229,9 +229,14 @@ static unsigned int m_hours, m_days;
       }
   }
 
-  void m_reset(){
-	  ESP.reset();      // Not sure which one to use reports that .restart() has problems
-	  ESP.restart();
+  void my_reset(bool tt = true){
+    delay(200);
+    if(tt == true) Serial.println(F("reset")); else Serial.println(F("restart"));
+    Serial.flush();
+    my_yield();
+
+    // Not sure which one to use reports that .restart() has problems
+    if(tt == true) ESP.reset(); else ESP.restart();
   }
 
   /*
@@ -251,25 +256,28 @@ static unsigned int m_hours, m_days;
 
     const char erralrt[] PROGMEM = "\t\t\t\t******* ERROR ERROR ERROR *******";    // used 4 times in stationPage
 
+    // TODO use less ram? const char br_tag[] PROGMEM = "<BR>";
+
     const char lightingSymb[] PROGMEM = "&#9889;&#9889;";    // "ϟϟ" Lighting bolts
     //const static char lightingSymb[] PROGMEM = "&#9735;&#9735;&#9735;"; // "☇☇☇" NOAA weather symbol
 
     // goBack now used only once in testPage idLED and eprom red was used in Station page for out of memory message
     const char goBack[] PROGMEM = "<!DOCTYPE html> <script language=\"JavaScript\" type=\"text/javascript\"> setTimeout(\"window.history.go(-1)\",10); </script>";
 
-    const char ooMem[] PROGMEM = "WX Out of Memory";   // This message is pointed to after the bigBlock array is full
+    const char ooMem[] PROGMEM = "WX Out of Memory";  // This message is pointed to after the bigBlock array is full
     const char offLine[] = "Off-Line";          // Used if station does not return value
-                                                // NOTE: using PROGMEM cause a trap when Off-Line is coppied
+                                                // NOTE: PROGMEM cause a trap when copied with stringcat() (use stringcatP())
 
     unsigned int cycleCount = 0;     // for debug count the number of downloads since last reboot
-    unsigned int cycleErrCount = 0;  // for debug count the number of failed downloads since last reboot
-
+    unsigned int totalCycleCount = 0; // Total downloads after last boot
+    uint16_t cycleErrCount = 0;  // for debug count the number of failed downloads since last reboot
+    uint16_t totalCycleErrCount = 0;   // Total errors after last boot
 /*
  *    Reboot check don't test LEDS and set LED brightness 
  *    // Structure to store data in RTC memory
  *    call with
  *    	true:
- *    		 Save rtcData currently magic_number and light_offset
+ *    		 Save rtcData currently magic_number and light_offset and boot reason
  *    		 save
  *    	false:
  *    		check for softBoot (magic number)
@@ -277,31 +285,55 @@ static unsigned int m_hours, m_days;
  *    			returns
  *    				true:  soft boot
  *    				false: hardware boot
- *    				lightOffset value changed with saved value
+ *    				lightOffset and boot value changed with saved value
  *
  *
  */
-//#define MAGIC_REBOOT_FLAG 0xDEADBEEF
+ //TODO global lightOffser should not be here should be in LEDString need to access in loop()
+ static int8_t lightOffset = LIGHT_OFFSET; // get from user_settings NOTE: Moved out of LEDString.h for now
 #define MAGIC_REBOOT_FLAG 0xB003		// max 16 bits
 #define RTC_OFFSET 32               	// Starting location to save data
     									// Could be 0 there is no conflict with WiFiManger
+ enum boot_Cause{
+  b_Hard,
+  b_MemoryFrag,
+  b_init_MemFrag,
+  b_Connect,
+  b_html,
+  b_BootTest,
+  b_RebootTest
+};
+static int8_t boot_reason = b_Hard;
 
 static struct{
-	uint16_t magic_number;
-	int8_t light_Offset;
-    } __attribute__((aligned(4))) rtcData;
+  uint16_t magic_number;
+  int8_t light_Offset;
+  int8_t  cause;
+  int16_t totalCycleCount;
+  int16_t totalCycleErrCount;
+  // uptime                   uptime()
+} __attribute__((aligned(4))) rtcData;    // Must be 32 bit aligned!
 
-boolean softboot(boolean setSoftBoot, int8_t *lightOffset ){
+boolean set_softboot(boolean setSoftBoot, int8_t *lightOffset , int8_t *cause){
+Serial.println(F("Size rtc = ")); Serial.println(sizeof(rtcData));
 	 if(setSoftBoot){					// Save magic_number and offset
 		 rtcData.magic_number = MAGIC_REBOOT_FLAG;
 		 rtcData.light_Offset = *lightOffset;
+     rtcData.cause        = *cause;
+     rtcData.totalCycleCount = totalCycleCount;
+     rtcData.totalCycleErrCount = totalCycleErrCount;
 		 ESP.rtcUserMemoryWrite(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
 		 return true;
 	 } else {							// Check magic+number
 		  ESP.rtcUserMemoryRead(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
 		  if (rtcData.magic_number == MAGIC_REBOOT_FLAG) {
-		    *lightOffset=rtcData.light_Offset;		//	return value of offset
-		    rtcData.magic_number = 0;	// Reset magic_number flag so it doesn't trigger on subsequent reboots
+		    *lightOffset = rtcData.light_Offset;		//	return value of offset
+        *cause = rtcData.cause;
+        totalCycleCount = rtcData.totalCycleCount;
+        totalCycleErrCount = rtcData.totalCycleErrCount;
+        rtcData.magic_number = 0;	// Reset magic_number flag so it doesn't trigger on subsequent reboots
+        //rtcData.light_Offset  keep for possible future use
+        rtcData.cause = 0;
 		    ESP.rtcUserMemoryWrite(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
 		    return true;
 		  } else {						// Normal boot or power-on reset
@@ -309,21 +341,53 @@ boolean softboot(boolean setSoftBoot, int8_t *lightOffset ){
 		  }
 	 }
  }
+
+
 /*
- * 	Use to aid in checking for conflicting storage
+ *                     getCommand()
+ *          gets numeric input from the serial console
+ *          returns
+ *            integer value of the char or chars received
+ *            -1 no numeric values received
+ *          ignores non numeric chars
+ *
+ *          Changed to use Serialevent much cleaner way to get input
  */
-//void dumpRtcMemory() {
-//  const int totalWords = 128;  // 512 bytes / 4 bytes per word
-//  uint32_t buf[totalWords];
-//
-//  if (ESP.rtcUserMemoryRead(0, buf, sizeof(buf))) {
-//    Serial.println("\nRTC User Memory Dump:");
-//    for (int i = 0; i < totalWords; i++) {
-//      Serial.printf("Offset %3d (byte %3d): 0x%08X\n", i, i * 4, buf[i]);
-//    }
-//  } else {
-//    Serial.println("Failed to read RTC memory.");
-//  }
-//}
+int getCommand() {
+  //   static int retval; now using global retVal
+  retVal = 0;        // Accumulate single digits
+  char rx_byte = 0;     // for input from serial monitor
+  while (Serial.available() > 0) {    // is a character available?
+    rx_byte = Serial.read();       // get a character
+      switch(rx_byte){
+        case  'B':
+        case  'b':
+            boot_reason = b_BootTest;
+              set_softboot(true, &lightOffset, &boot_reason);
+              my_reset(true);
+        break;
+        case  'R':
+        case  'r':
+          boot_reason = b_RebootTest;
+          set_softboot(true, &lightOffset, &boot_reason);
+          my_reset(false);
+        break;
+        default:
+          // Sanity check
+          if ((rx_byte >= '0') && (rx_byte <= '9')) {
+            retVal = (retVal * 10);
+            retVal = retVal + (int) (rx_byte - '0');
+          } else {
+            Serial.print(F("1-rx_byte = ")); Serial.println(rx_byte);
+            delay(10); // allow next byte to collect important will not collect all values without a delay
+            my_yield();
+          } // end: while (Serial.available() > 0)
+          Serial.print(F("2-rx_byte = ")); Serial.println(rx_byte);
+        break;
+      }
+  }
+  Serial.print(F("GetCommand RetVal = "));  Serial.println(retVal);
+  return retVal;
+}
 
 #endif
