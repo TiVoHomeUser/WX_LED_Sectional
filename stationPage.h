@@ -120,12 +120,13 @@ void stationPage(int columns){
                      "</style>\n"
                      "</head>\n"
                      "<body>"
-                     "<h1><a href=\"/\">ESP8266 WX_Sectional LED</a></h1>\n"
-                     "<h3>"));
-  if(lightningLedsCount > 0) server.sendContent_P(lightingSymb);   // Display Lighting symbols in page header
-  server.sendContent(F(" Stations "));
-  if(lightningLedsCount > 0) server.sendContent_P(lightingSymb);   // Display Lighting symbols in page header
-  server.sendContent(F( "</h3>\n"
+                     "<h1><a href=\"/\">"));
+                     server.sendContent(hostname);
+                     server.sendContent(F("</a></h1>\n<h3>"));
+                    if(lightningLedsCount > 0){ server.sendContent_P(lightingSymb); }  // Display Lighting symbols in page header
+                    server.sendContent(F(" Stations "));
+                    if(lightningLedsCount > 0){ server.sendContent_P(lightingSymb); }  // Display Lighting symbols in page header
+                    server.sendContent(F( "</h3>\n"
                         "<form action=\"/wxID\">\n"
                         "<table class=\"center\" border=\"3\">\n"
                         "\n<tr>"));

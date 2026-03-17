@@ -36,13 +36,16 @@
  *
  * 2026/02/21 BearSSL::WiFiClientSecure client changed to static BearSSL::WiFiClientSecure* WXclient hopefully to prevent memory fragmentation
  *
- * 2026/02/28 Removed all vector types (lightningLeds), Refresh now atatic WXClient avery few hours, Softboot for heap fragmentation
+ * 2026/02/28 Removed all vector types (lightningLeds), Refresh now static WXClient refresh avery few hours, Softboot for heap fragmentation
  *   and for the future incBigBlock removed sizeof(char) in case of 32 bit char
  *
  *  2026/03/12
  *    Addidtion of connect totals
  *    Clean up removing not needed comments and removed DEBUG DEBUG1 compile time configurations
  * 
+ * 2026/03/14
+ *    Use hostname instead of hardcoded name in info and sation page to match title in root page
+ *
  */
 #include "Arduino.h"
 

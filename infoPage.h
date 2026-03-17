@@ -27,10 +27,12 @@ void infoPage(void){
 	  server.sendContent(F("<script type=\"text/javascript\"> setTimeout(\"location.replace(location.origin)\", 60000); </script>\n"  // 1000 = 1 Sec test takes about 20 seconds
 	                      "</head>\n"
 	                      "<body>"
-              	  	  	  "<h3 align=\"center\"> Info </h3>"
+												"<h1 align=\"center\"> <a href=\"/\">"));
+	  										server.sendContent(hostname);
+												server.sendContent(F("</a></h1>\n"
+              	  	  	"<h3 align=\"center\"> Info </h3>"
 	                      "<h2 align=\"center\" style=\"color:lighttgray;margin:20px;\">"));
-	  server.sendContent(hostname);
-      server.sendContent(F("<p>#WX Stations: "));
+    server.sendContent(F("<p>#WX Stations: "));
 
       server.sendContent(b2Scs(actualNumAirports));
       server.sendContent(F("<BR> MaxTxt Size = ")); server.sendContent(b2Scs(rtmaxl));
@@ -103,9 +105,6 @@ void infoPage(void){
 			server.sendContent(F("<BR>"));
       
       server.sendContent(F("</h2>\n"
-  	  	  	  "<h1 align=\"center\"> <a href=\"/\">ESP8266 WX_Sectional LED</a>\n </h1>"
-
-//	                      "<h3 align=\"center\"> Info </h3>"
 	                      "</body>"
 	                      "</html>"));
 	  server.client().stop();
