@@ -47,7 +47,7 @@ void testPage(void){
 void iDLED(void){
   if(server.hasArg("wxid")){
 	unsigned short airportnumber = server.arg("wxid").toInt();
-	if(airportnumber < NUM_AIRPORTS) {
+	if(airportnumber < NUM_OF_LEDS) {
     Serial.print(F("Hello iDLED called LED "));
     server.setContentLength(CONTENT_LENGTH_UNKNOWN);
     server.send_P( 200, "text/html", htmlHeadStr);

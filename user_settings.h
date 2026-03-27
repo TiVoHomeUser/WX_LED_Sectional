@@ -1,8 +1,27 @@
 /*
 user_settings.ino
  Created on: Jan 1, 2021
-     Author: vwheeler
+ Last modified March 28 2026
+     Author: vwheeler myapps@vicw.net
 */
+
+/*
+ * Note:  I have tested with:
+ *   D1 mini Lite D2  pin 4
+ *   D1 mini      D5  pin 14
+ *          ESP8266 2.7.4
+ *          FastLED 3.7.0
+ * 
+ *   NodeMCU 1.0 ESP-12-E using pin D2 (2)
+ *     working with
+ *         ESP8266 2.7.4                    don't work 3.0.0
+ *         FastLED 3.3.0,  3.6.0,  3.7.0    don't work 3.9.20, 3.7.8, 3.7.7
+ * 
+ *   ESP32-C3  using pin 4 GPIO4
+ *        esp32 by Espressif 3.3.7
+ *        FastLED 3.10.3                    don't work  3.2.0, 2.0.0 python error
+ */
+
 
 #ifndef USER_INFO_INO
 #define USER_INFO_INO 1
@@ -15,24 +34,40 @@ user_settings.ino
 
 #define CONNECTION_ERR_RRBOOT 15		// Number of connection errors that will force a reboot
 
-#define NUM_AIRPORTS 100            // This is really the number of LEDs not Stations
-
-const static int numOfAirportsGet = 32; // Number of airports that are download per loop
+const static int numOfAirportsGet = 100;// Number of airports that are download per loop. Lower this value to make more connections if loosing data
 										                    // New page downloads 1000 bytes per station and may need to limit the download buffer size.
 
 #define WX_REFRESH_INTERVAL  12         // Minutes between WX updates
 
 #define WIND_THRESHOLD 25               // Maximum wind speed for green, otherwise the LED turns yellow
-#define DO_WINDS true                   // color LEDs for high winds
+#define DO_WINDS  true                  // color LEDs for high winds
 #define DO_LIGHTNING true               // Lightning uses more power, but is cool.
 
+#define LIGHT_OFFSET 0				 	      // LED intensity -128 to 127 
+										                  // lightOffset can be adjusted using the slider on main page if html enabled.
 #define USE_LIGHT_SENSOR true			    // Set USE_LIGHT_SENSOR to true if you're using any light sensor.
 #define LIGHT_SENSOR_TSL2561 false		// Set LIGHT_SENSOR_TSL2561 to true if you're using a TSL2561 digital light sensor
 										                  // false assumes an analog light sensor.
-#define LIGHT_OFFSET 0				 	      // Adjust the LED intensity -128 to 128
-										                  // lightOffset can be changed using the slider on main html page if enabled.
+                                      // Note: light sensor pins are selected in LedString.h
+#define LED_STR_DATA_PIN  4 //14      // Logical pin that the LED string is connected to see pins_arduino.h
+                                      //       example: for the esp8266 Mini the pin Labled D2 is GPIO4 use LED_STR_DATA_PIN 4
+// ─────────────────────────────────────────────────────────────────────────────
+//  NeoPixel / LED strip data pin
+//
+//  ESP8266 (D1 Mini):
+//    D4 = GPIO2 — original wiring.
+//
+//  ESP32-C3 SuperMini / DevKitM-1:
+//    GPIO8 is shared with the on-board WS2812 RGB LED — avoid it for the strip.
+//    Avoid GPIO18/19 (USB on SuperMini)
+//    Good choices: GPIO3, 4, 5, 6, or 7.
+//    Change LED_DATA_PIN below to match your wiring.
+// ─────────────────────────────────────────────────────────────────────────────
 
-const static char PROGMEM airports[NUM_AIRPORTS][5] = {
+#define NUM_OF_LEDS 100            // This is really the number of LEDs not Stations
+//
+// Total number of stations including NULL's need to equal the Number of LEDs
+const static char PROGMEM airports[NUM_OF_LEDS][5] = {
   "KBEH", // 1
   "KLWA", // 2
   "NULL", // 3
@@ -137,3 +172,5 @@ const static char PROGMEM airports[NUM_AIRPORTS][5] = {
 
 
 #endif
+
+

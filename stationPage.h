@@ -131,7 +131,7 @@ void stationPage(int columns){
                         "<table class=\"center\" border=\"3\">\n"
                         "\n<tr>"));
   int row = 1; // int maxrow = 3; // iphone 3 macbook 8;
-  for(int i=0; i < NUM_AIRPORTS; i++){
+  for(int i=0; i < NUM_OF_LEDS; i++){
     if( mtrsf[i].mtrstat < NOTUSED ){    // 99 for NULL location skip it
       server.sendContent(lEDButton(i));
       row++;
