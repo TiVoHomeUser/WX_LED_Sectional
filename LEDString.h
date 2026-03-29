@@ -1,7 +1,9 @@
 #ifndef LEDString_ino
 #define LEDString_ino "Jan 2, 2021"
 
-//#define FASTLED_ALLOW_INTERRUPTS 1 Fix for fastled conflict with WiFi won't compile 
+// All-ready disabled for WS8211 LED string JIC for trying different versions of FastLED
+#define FASTLED_ALLOW_INTERRUPTS 0 // Fix for fastled conflict with WiFi won't compile 
+
 #include <FastLED.h>
 
 // FastLED conflects  with WiFi with the current versions of esp8266 board manager

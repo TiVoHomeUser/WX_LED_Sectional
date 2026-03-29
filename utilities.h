@@ -383,15 +383,12 @@ int getCommand() {
           if ((rx_byte >= '0') && (rx_byte <= '9')) {
             if (!gotDigit) { retVal = 0; gotDigit = true; }  // first digit: clear the -1
             retVal = (retVal * 10) + (int)(rx_byte - '0');
-          } else {
-            // Non-digit, non-command byte (CR, LF, noise) — consume and ignore.
-            delay(10);
-            my_yield();
-          }
+           }
         break;
       }
+      delay(1);   // seems to be important sometimes returns seperate values if delay not here
+      my_yield();
   }
-  if (gotDigit) { Serial.print(F("GetCommand RetVal = ")); Serial.println(retVal); }
   return retVal;
 }
 
