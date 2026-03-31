@@ -8,7 +8,7 @@
 
 // FastLED conflects  with WiFi with the current versions of esp8266 board manager
 // Here is where I am working to disable WiFi when updating LEDS.
-void FastLED_show(){
+inline void FastLED_show(){
 //  WiFi.disconnect();
 //  server.close();
   FastLED.show();
