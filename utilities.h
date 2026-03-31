@@ -1,5 +1,5 @@
 #ifndef util_ino
-#define util_ino 1
+#define util_ino 2
 
 /*
  * 														Vic Utils
@@ -37,7 +37,14 @@ boolean timeElapsed() {
   return false;
 }
 
-#define my_yield() {ESP.wdtFeed(); yield();}     // reported problems with yield() not always reseting the software watchdog timer
+// #define my_yield() {ESP.wdtFeed(); yield();}     // reported problems with yield() not always reseting the software watchdog timer
+// my_yield():
+//   ESP8266: defined in platform.h as {ESP.wdtFeed(); yield();}
+//   ESP32:   defined in platform.h as {yield();}  (FreeRTOS handles the watchdog)
+// The #define is already set by platform.h before this file is included.
+#if !defined(my_yield)
+ #define my_yield() {ESP.wdtFeed(); yield();}     // reported problems with yield() not always reseting the software watchdog timer
+#endif
 
 /*
  *
@@ -155,11 +162,13 @@ boolean cendsWith(const char* str1 , const char* str2){
 
 */
 void showFree(boolean force) {
-  if ( force || (ESP.getHeapFragmentation() >= 50) || (ESP.getFreeHeap() < 1000) ) {
-    Serial.print(F("\n\tFree Heap = ")); Serial.print(ESP.getFreeHeap());
-    Serial.print(F("\tHeapFragmentation = ")); Serial.print(ESP.getHeapFragmentation());
-    Serial.print(F("\tMaxFreeBlockSize = ")); Serial.println(ESP.getMaxFreeBlockSize());
-    // Serial.print(F()"Free = ")); Serial.println(ESP.freeMemory());
+  uint8_t  frag  = platform_heap_frag_pct();
+  uint32_t free  = platform_free_heap();
+  uint32_t block = platform_max_free_block();
+  if ( force || (frag >= 50) || (free < 1000) ) {
+    Serial.print(F("\n\tFree Heap = "));       Serial.print(free);
+    Serial.print(F("\tHeapFragmentation = ")); Serial.print(frag);
+    Serial.print(F("\tMaxFreeBlockSize = "));  Serial.println(block);
   }
 }
 
@@ -216,7 +225,6 @@ static unsigned int m_hours, m_days;
   return m_uptimeCstr;
  }
 
-
   // Cycle built in LED to show we are alive
   void toggleBuiltInLED(){
     static boolean on_Board_LED_state = false;        // Toggle built in LED each loop
@@ -229,14 +237,17 @@ static unsigned int m_hours, m_days;
       }
   }
 
+  /*
+   * my_reset() — wraps platform_reset() from platform.h.
+   *   tt=true  -> hard reset (ESP8266: ESP.reset(), ESP32: ESP.restart())
+   *   tt=false -> soft reset (ESP8266: ESP.restart(), ESP32: ESP.restart())
+   */
   void my_reset(bool tt = true){
     delay(200);
     if(tt == true) Serial.println(F("reset")); else Serial.println(F("restart"));
     Serial.flush();
     my_yield();
-
-    // Not sure which one to use reports that .restart() has problems
-    if(tt == true) ESP.reset(); else ESP.restart();
+    platform_reset(tt);   // platform.h handles the right call per board
   }
 
   /*
@@ -273,26 +284,23 @@ static unsigned int m_hours, m_days;
     uint16_t cycleErrCount = 0;  // for debug count the number of failed downloads since last reboot
     uint16_t totalCycleErrCount = 0;   // Total errors after last boot
 /*
- *    Reboot check don't test LEDS and set LED brightness 
- *    // Structure to store data in RTC memory
- *    call with
- *    	true:
- *    		 Save rtcData currently magic_number and light_offset and boot reason
- *    		 save
- *    	false:
- *    		check for softBoot (magic number)
- *    			clear magic number
- *    			returns
- *    				true:  soft boot
- *    				false: hardware boot
- *    				lightOffset and boot value changed with saved value
+ *    Reboot check — soft boot magic number, light offset, boot cause, totals.
  *
+ *    set_softboot(true,  &lightOffset, &cause) — save state before reboot
+ *    set_softboot(false, &lightOffset, &cause) — read state after reboot
+ *      returns true  = soft boot (magic number matched)
+ *      returns false = hard/power-on boot
  *
+ *    Uses platform_rtc_read() / platform_rtc_write() from platform.h:
+ *      ESP8266 -> ESP.rtcUserMemoryRead/Write
+ *      ESP32   -> Preferences (NVS), survives soft reset
  */
+
  //TODO global lightOffser should not be here should be in LEDString need to access in loop()
  static int8_t lightOffset = LIGHT_OFFSET; // get from user_settings NOTE: Moved out of LEDString.h for now
 #define MAGIC_REBOOT_FLAG 0xB003		// max 16 bits
-#define RTC_OFFSET 32               	// Starting location to save data
+//#define RTC_OFFSET 32               	// Starting location to save data
+// RTC_OFFSET is defined in platform.h for ESP8266 only.
     									// Could be 0 there is no conflict with WiFiManger
  enum boot_Cause{
   b_Hard,
@@ -305,43 +313,34 @@ static unsigned int m_hours, m_days;
 };
 static int8_t boot_reason = b_Hard;
 
-static struct{
-  uint16_t magic_number;
-  int8_t light_Offset;
-  int8_t  cause;
-  int16_t totalCycleCount;
-  int16_t totalCycleErrCount;
-  // uptime                   uptime()
-} __attribute__((aligned(4))) rtcData;    // Must be 32 bit aligned!
-
+// rtcData struct is defined in platform.h (shared layout, platform-specific storage)
+static RtcData rtcData;
 boolean set_softboot(boolean setSoftBoot, int8_t *lightOffset , int8_t *cause){
-Serial.println(F("Size rtc = ")); Serial.println(sizeof(rtcData));
-	 if(setSoftBoot){					// Save magic_number and offset
-		 rtcData.magic_number = MAGIC_REBOOT_FLAG;
-		 rtcData.light_Offset = *lightOffset;
-     rtcData.cause        = *cause;
-     rtcData.totalCycleCount = totalCycleCount;
+  Serial.print(F("Size rtc = ")); Serial.println(sizeof(rtcData));
+	 if(setSoftBoot){
+		 rtcData.magic_number      = MAGIC_REBOOT_FLAG;
+		 rtcData.light_Offset      = *lightOffset;
+     rtcData.cause              = *cause;
+     rtcData.totalCycleCount    = totalCycleCount;
      rtcData.totalCycleErrCount = totalCycleErrCount;
-		 ESP.rtcUserMemoryWrite(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
+		 platform_rtc_write(&rtcData);   // platform.h: RTC mem (ESP8266) or NVS (ESP32)
 		 return true;
-	 } else {							// Check magic+number
-		  ESP.rtcUserMemoryRead(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
+	 } else {
+		  platform_rtc_read(&rtcData);   // platform.h: RTC mem (ESP8266) or NVS (ESP32)
 		  if (rtcData.magic_number == MAGIC_REBOOT_FLAG) {
-		    *lightOffset = rtcData.light_Offset;		//	return value of offset
-        *cause = rtcData.cause;
-        totalCycleCount = rtcData.totalCycleCount;
-        totalCycleErrCount = rtcData.totalCycleErrCount;
-        rtcData.magic_number = 0;	// Reset magic_number flag so it doesn't trigger on subsequent reboots
-        //rtcData.light_Offset  keep for possible future use
-        rtcData.cause = 0;
-		    ESP.rtcUserMemoryWrite(RTC_OFFSET, (uint32_t*)&rtcData, sizeof(rtcData));
+		    *lightOffset              = rtcData.light_Offset;
+        *cause                    = rtcData.cause;
+        totalCycleCount           = rtcData.totalCycleCount;
+        totalCycleErrCount        = rtcData.totalCycleErrCount;
+        rtcData.magic_number = 0;
+        rtcData.cause        = 0;
+		    platform_rtc_write(&rtcData);
 		    return true;
-		  } else {						// Normal boot or power-on reset
+		  } else {
 		    return false;
 		  }
 	 }
  }
-
 
 /*
  *                     getCommand()
@@ -354,11 +353,15 @@ Serial.println(F("Size rtc = ")); Serial.println(sizeof(rtcData));
  *          Changed to use Serialevent much cleaner way to get input
  */
 int getCommand() {
-  //   static int retval; now using global retVal
-  retVal = 0;        // Accumulate single digits
-  char rx_byte = 0;     // for input from serial monitor
-  while (Serial.available() > 0) {    // is a character available?
-    rx_byte = Serial.read();       // get a character
+  // Returns: the LED number to identify (>= 0) or -1 if no valid digit received.
+  // Returning -1 for non-digit input (noise, CR, LF, framing errors) prevents
+  // idLED(0) from firing on every spurious UART byte, which caused visible
+  // color changes every few seconds in steady state.
+  retVal = -1;       // -1 = no valid numeric input received yet
+  boolean gotDigit = false;
+  char rx_byte = 0;
+  while (Serial.available() > 0) {
+    rx_byte = Serial.read();
       switch(rx_byte){
         case  'B':
         case  'b':
@@ -372,21 +375,20 @@ int getCommand() {
           set_softboot(true, &lightOffset, &boot_reason);
           my_reset(false);
         break;
+        case  'T':
+        case  't':
+          my_Event = MY_TEST;
+        break;
         default:
-          // Sanity check
           if ((rx_byte >= '0') && (rx_byte <= '9')) {
-            retVal = (retVal * 10);
-            retVal = retVal + (int) (rx_byte - '0');
-          } else {
-            Serial.print(F("1-rx_byte = ")); Serial.println(rx_byte);
-            delay(10); // allow next byte to collect important will not collect all values without a delay
-            my_yield();
-          } // end: while (Serial.available() > 0)
-          Serial.print(F("2-rx_byte = ")); Serial.println(rx_byte);
+            if (!gotDigit) { retVal = 0; gotDigit = true; }  // first digit: clear the -1
+            retVal = (retVal * 10) + (int)(rx_byte - '0');
+           }
         break;
       }
+      delay(1);   // seems to be important sometimes returns seperate values if delay not here
+      my_yield();
   }
-  Serial.print(F("GetCommand RetVal = "));  Serial.println(retVal);
   return retVal;
 }
 

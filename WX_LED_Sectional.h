@@ -1,25 +1,26 @@
 #ifndef WX_Led_Sectional_ino
-#define WX_Led_Sectional_ino "Jan 2, 2021"
+#define WX_Led_Sectional_ino "March 21, 2026"
 
 #define WX_DEBUG false		      // Extra station output to Serial.print port
 
-#if AUTOCONNECT
-#include <WiFiManager.h>
-#else
-#include <ESP8266WiFi.h>
-#endif
-
-#if HTML
-#include <ESP8266mDNS.h>
-#include <ESP8266WebServer.h>
-#endif
+/*
+ * WiFi / SSL / WebServer / mDNS includes have been moved to platform.h.
+ * platform.h is included first in WX_LED_Sectional.ino and provides:
+ *   - The right WiFi + WebServer + mDNS headers for ESP8266 or ESP32
+ *   - WxSSLClient  typedef  (BearSSL::WiFiClientSecure | WiFiClientSecure)
+ *   - WebServerClass define (ESP8266WebServer         | WebServer)
+ *   - resetWxClient(client), platform_rtc_read/write(), platform_reset()
+ *   - platform_free_heap(), platform_heap_frag_pct(), platform_max_free_block()
+ *
+ * Do NOT add board-specific WiFi/SSL/WebServer includes here.
+ */
 
 #define WXSERVER "aviationweather.gov"
 #define   BASE_URI "/api/data/dataserver?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
 
 int retVal;		// To save memory used everywhere
 
-int actualNumAirports  = NUM_AIRPORTS;  // Total without NULL locations
+int actualNumAirports  = NUM_OF_LEDS;  // Total without NULL locations
 int airportStringsSize = 0;             // total number of char's needed
 int noOfAirportStrings = 1;             // if dividing up for download how many substrings needed / used
 char** airportStrings;                  // pointers to substrings
@@ -44,7 +45,7 @@ typedef struct mtrs {
   boolean mtrlighting;  // Used for html button display quicker to check by led number instead of comparing an entire vector entry's for every led
   const char* rawText;
 } __attribute__((aligned(4))) mtrs;
-mtrs mtrsf[NUM_AIRPORTS];
+mtrs mtrsf[NUM_OF_LEDS];
 
 #define READ_TIMEOUT 15 // Cancel query if no data received (seconds)
 #define RETRY_TIMEOUT 2 * 60 //110 // Seconds before attempting connection again on failure

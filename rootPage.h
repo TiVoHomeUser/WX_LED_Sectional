@@ -83,7 +83,7 @@ void rootPage(){
   server.sendContent(F("</h1>"));
 
   server.sendContent(F("<h6 align=\"center\" style=\"color.blue;margin:15px;\">"));
-  server.sendContent(F( copyright)); server.sendContent(F(" ")); server.sendContent(F(compiledate));
+  server.sendContent(F( copyright)); server.sendContent(F(" ")); server.sendContent(F(compiledate)); server.sendContent(F(" V")); server.sendContent(VERSION);
   server.sendContent(F("</h6>\n"
                        "<h4 align=\"center\" style=\"color.blue;margin:15px;\">")); //build ")); server.sendContent(F( compiledate));
   	  	  	  	  	  server.sendContent(uptime());

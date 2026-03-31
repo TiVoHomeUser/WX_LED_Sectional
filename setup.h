@@ -1,5 +1,5 @@
 #ifndef setup_ino
-#define setup_ino Jan 1, 2021
+#define setup_ino Mar 21, 2026
 #include "utilities.h"
 #define PORTAL_TIMEOUT		 5			// Portal Timeout in minutes (how long to wait as configuration access point)
 
@@ -16,25 +16,19 @@ void setupConnection(void){
 		  Serial.println(F("============ WiFi Saved ============"));
       Serial.println(wm.getWiFiSSID());
       Serial.println(wm.getWiFiPass());
-//		  WiFi.begin(wm.getWiFiSSID(),wm.getWiFiPass());    // use saved credentials directly, no AP = no fragmentation
 	  } else {
 		  Serial.println(F("========= WiFi *NOT* Saved ========="));
-      // wm.autoConnect(MYHOSTNAME"_AP");					// SSID for this Access point no password
-      // Serial.println(wm.getWiFiSSID());
-      // Serial.println(wm.getWiFiPass());
 	  }
-    if(WiFi.status() == WL_WRONG_PASSWORD | WL_NO_SSID_AVAIL){
+//    if(WiFi.status() == WL_WRONG_PASSWORD | WL_NO_SSID_AVAIL){
+    if(WiFi.status() != WL_CONNECTED ){ //== WL_NO_SSID_AVAIL){
       wm.autoConnect(MYHOSTNAME"_AP");					// SSID for this Access point no password
       Serial.println(wm.getWiFiSSID());
       Serial.println(wm.getWiFiPass());
     }
   }
 
-
 #else
-
   WiFi.begin(ssid, password);
-
 #endif
 
   int connect_attempts = 120;	// around 60 seconds
@@ -44,15 +38,21 @@ void setupConnection(void){
           delay(500); yield();
   }
   Serial.println("");
-
-  if(WiFi.status() !=  WL_CONNECTED) my_reset();				// Give up, force reboot
-  
+  if(WiFi.status() ==  WL_CONNECTED) {
+    platform_WiFi_setSleepMode(WIFI_NONE_SLEEP);
+  } else {
+    my_reset();				// Give up, force reboot  
+  }
   showFree(true);
-  if(ESP.getHeapFragmentation() > 70){
-	  Serial.println(F("Heap too fragmented reboot forced"));	// Configure AP Access point fragments memory;
+
+  // platform_heap_frag_pct() from platform.h:
+  //   ESP8266 -> ESP.getHeapFragmentation()
+  //   ESP32   -> computed via heap_caps (proportional, threshold works on both)
+  if(platform_heap_frag_pct() > 70){
+	  Serial.println(F("Heap too fragmented reboot forced"));
     boot_reason = b_init_MemFrag;
-    set_softboot(true, &lightOffset, &boot_reason);  // ← preserve soft boot flag
-	  my_reset();		// free some memory
+    set_softboot(true, &lightOffset, &boot_reason);
+	  my_reset();
   }
 
   Serial.println("");
@@ -61,16 +61,18 @@ void setupConnection(void){
   Serial.print(F("IP address: "));
   Serial.println(WiFi.localIP());
 }
-
+// NOTE esp8266 nodemu binled = 2 data pin = 4
 void setupBuiltInLED(void){
 	  pinMode(LED_BUILTIN, OUTPUT);     // Initialize the LED_BUILTIN pin as an output
 	  digitalWrite(LED_BUILTIN, HIGH);  // Off
-
 }
 
 void setupSerial(void){
 	  delay(100);
 	  Serial.begin(74880); //115200);
+    delay(100);
+    Serial.flush();
+    Serial.println();
 	  Serial.print(F(copyright)); Serial.print(F(" ")); Serial.println(F(compiledate));
 }
 
@@ -93,6 +95,9 @@ void setupmDNS(void){
 #endif
 
 void setupServer(void){
+  	// 'server' is declared in WX_LED_Sectional.ino as WebServerClass server(80).
+	  // WebServerClass resolves to ESP8266WebServer (ESP8266) or WebServer (ESP32)
+	  // via the typedef in platform.h
 	  server.onNotFound(handleNotFound);
 	  server.on(F("/")         , 	rootPage);
 	  server.on(F("/test")     , 	testPage);
@@ -179,8 +184,8 @@ char* airportString = NULL;             // working c-string airports array witho
  *						              setupAirportString()
  *
  *
- * const static int numOfAirportsGet  = 25; // NUM_AIRPORTS; // Number of airports to download per loop  MOVED to .h
- * int actualNumAirports  = NUM_AIRPORTS;   // Total without NULL locations
+ * const static int numOfAirportsGet  = 25; // NUM_OF_LEDS; // Number of airports to download per loop  MOVED to .h
+ * int actualNumAirports  = NUM_OF_LEDS;   // Total without NULL locations
  * int airportStringsSize = 0;              // total number of char's needed
  * int noOfAirportStrings = 1;              // if dividing up for download how many substrings needed / used
  * char** airportStrings;                   // pointers to substrings
@@ -205,7 +210,7 @@ void setupAirportString() {
     airportIndex[0] = 0;
     int sindex[actualNumAirports];
     int sidxi = 0;
-    for (int i = 0; i < NUM_AIRPORTS; i++) {
+    for (int i = 0; i < NUM_OF_LEDS; i++) {
       if (strncmp_P("NULL", airports[i], 4) != 0) sindex[sidxi++] = i;
     }
     airportStrings[0] = airportString;
@@ -216,20 +221,16 @@ void setupAirportString() {
     airportIndex[noOfAirportStrings] = sindex[actualNumAirports - 1];
     return;
   }
-  // else {
-  //   Serial.println(F("airportString == NULL"));
-  // }
 
   // First find the number of stations and compute amount of memory needed to be allocated
   actualNumAirports = 0;    // Actual number of active WX stations without the NULL's
-  for (int i = 0; i < NUM_AIRPORTS; i++) {
+  for (int i = 0; i < NUM_OF_LEDS; i++) {
     if (strncmp_P("NULL", airports[i], 4) != 0)
       actualNumAirports++;
     mtrsf[i].mtrlighting = false;   // reset lightning
     mtrsf[i].mtrstat = NOTUSED;
     mtrsf[i].mtrspeed = 0;          // wind in knots
     mtrsf[i].mtrgusts = 0;          // reset wind gusts
-    //  mtrsf[i].mtrtime[0] = '\0'; // Observation Time Note: Replaced with rawText
     mtrsf[i].rawText = ooMem;       // Default pointer to static "Out Of Memory"
 }
 
@@ -250,7 +251,7 @@ void setupAirportString() {
 
 
   Serial.println(F("Creating a new airportString"));
-  for (int i = 0; i < NUM_AIRPORTS; i++) {
+  for (int i = 0; i < NUM_OF_LEDS; i++) {
     if (strncmp_P("NULL", airports[i], 4) != 0 ) {
       strcat_P(airportString, airports[i]);
       strcat(airportString, ",");   // Separate stations
@@ -282,7 +283,7 @@ void setupAirportString() {
   airportIndex[noOfAirportStrings] = sindex[actualNumAirports-1];
   Serial.print(F(" Last index number = ")); Serial.println(airportIndex[noOfAirportStrings]);
   /*
-   *            NUM_AIRPORTS 15
+   *            NUM_OF_LEDS 15
    *            airports[][5]
    *                    0  "KBEH", // 1
    *                    1  "KLWA", // 2

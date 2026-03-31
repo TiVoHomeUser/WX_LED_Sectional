@@ -13,6 +13,10 @@ void infoPage(void){
 	  Serial.print(server.client().remoteIP().toString());
 	  Serial.print(F("\tWiFi SSID: ")); Serial.println(WiFi.SSID());
 
+		Serial.print(F("LED_STR_DATA_PIN: ")); Serial.println(LED_STR_DATA_PIN);
+		Serial.print(F("LED_BUILTIN: ")); Serial.println(LED_BUILTIN);
+		Serial.print(F("Version: ")); Serial.println(VERSION);
+
 	  server.setContentLength(CONTENT_LENGTH_UNKNOWN);
 	  server.send_P( 200, "text/html", htmlHeadStr);
 
@@ -76,15 +80,9 @@ void infoPage(void){
 
 #if defined(ESP8266)
   server.sendContent(F("Chip: ESP8266<BR>"));
-  server.sendContent(F("CPU Frequency: ")); server.sendContent(b2UScs(ESP.getCpuFreqMHz())); server.sendContent(F(" MHz<BR>"));
-	server.sendContent(F("Flash Chip Real Size: ")); server.sendContent(formatBytes(ESP.getFlashChipSize()));	server.sendContent(F("<BR>"));
 #elif defined(ESP32)
-
-  server.sendContent("Chip: ESP32");
+  server.sendContent(F("Chip: ESP32<BR>"));
 /* TODO
-  server.sendContent("CPU Frequency: %u MHz\n", getCpuFrequencyMhz());
-  server.sendContent("Flash Chip Size: %u bytes\n", ESP.getFlashChipSize());
-  server.sendContent("Free Heap: %u bytes\n", ESP.getFreeHeap());
   server.sendContent("SDK Version: %s\n", ESP.getSdkVersion());
   server.sendContent("Partition Info:");
   const esp_partition_t* running = esp_ota_get_running_partition();
@@ -92,23 +90,26 @@ void infoPage(void){
 */
 
 #endif
+  server.sendContent(F("CPU Frequency: ")); server.sendContent(b2UScs(ESP.getCpuFreqMHz())); server.sendContent(F(" MHz<BR>"));
+	server.sendContent(F("Flash Chip Real Size: ")); server.sendContent(formatBytes(ESP.getFlashChipSize()));	server.sendContent(F("<BR>"));
 
-      server.sendContent(F(" Free = ")); // server.sendContent(b2UScs(ESP.getMaxFreeBlockSize()));
-			server.sendContent(formatBytes(ESP.getMaxFreeBlockSize()));
+      server.sendContent(F(" Free = "));
+			server.sendContent(formatBytes(platform_max_free_block()));
       server.sendContent(F("<BR>"));
 
-      server.sendContent(F("\n\tFree Heap = "));// server.sendContent(b2UScs(ESP.getFreeHeap()));	//uint32_t
-			server.sendContent(formatBytes(ESP.getFreeHeap()));
+      server.sendContent(F("\n\tFree Heap = "));
+			server.sendContent(formatBytes(platform_free_heap()));
       server.sendContent(F("<BR>"));
       	
-			server.sendContent(F("\tHeapFragmentation = ")); server.sendContent(b2cs(ESP.getHeapFragmentation())); //uint8_t
+			server.sendContent(F("\tHeapFragmentation = ")); server.sendContent(b2cs(platform_heap_frag_pct())); //uint8_t
 			server.sendContent(F("<BR>"));
+			server.sendContent(F("\tLED String data pin = ")); server.sendContent(b2cs(LED_STR_DATA_PIN)); //uint8_t
+			server.sendContent(F("\tBIL = ")); server.sendContent(b2cs(LED_BUILTIN)); //uint8_t
       
       server.sendContent(F("</h2>\n"
 	                      "</body>"
 	                      "</html>"));
 	  server.client().stop();
-	  //my_Event = MY_TEST;
 }
 
 #endif /* INFOPAGE_H_ */

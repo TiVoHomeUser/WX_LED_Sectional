@@ -7,7 +7,8 @@
  *  Reusable SSL client (prevents memory fragmentation)
  * ============================================================================
  */
-static BearSSL::WiFiClientSecure* wxClient = nullptr;
+//static BearSSL::WiFiClientSecure* wxClient = nullptr;
+static WxSSLClient* wxClient = nullptr;
 
 // In metars.h — replace initWxClient() with this:
 void resetWxClient() {
@@ -16,14 +17,16 @@ void resetWxClient() {
     delete wxClient;
     wxClient = nullptr;
   }
-  wxClient = new BearSSL::WiFiClientSecure();
+  //wxClient = new BearSSL::WiFiClientSecure();
+  wxClient = new WxSSLClient();
   wxClient->setInsecure();
   wxClient->setTimeout(8000);
 }
 
 void initWxClient() {
   if (wxClient == nullptr) {
-    wxClient = new BearSSL::WiFiClientSecure();
+    //wxClient = new BearSSL::WiFiClientSecure();
+    wxClient = new WxSSLClient();
     wxClient->setInsecure();
     wxClient->setTimeout(8000);
   }
@@ -128,7 +131,7 @@ bool getMetars() {
   total_C_StringLen = 0;
   boolean maxexcd = false;  // For debugging c-string size
 
-  for (int l = 0; l < NUM_AIRPORTS; l++) {
+  for (int l = 0; l < NUM_OF_LEDS; l++) {
 	  if(mtrsf[l].mtrstat != NOTUSED) {
 		  mtrsf[l].mtrlighting = false;
 		  mtrsf[l].rawText = offLine; //  for the .html panel display Default message if station does not report
@@ -138,7 +141,7 @@ bool getMetars() {
 
   lightningLedsCount = 0; // clear out existing lightning LEDs since they're global
 
-  fill_solid(leds, NUM_AIRPORTS, CRGB::Black); // Set everything to black just in case there is no report
+  fill_solid(leds, NUM_OF_LEDS, CRGB::Black); // Set everything to black just in case there is no report
 
   char c;
   byte wxcheck = DONE;                 // used for type of data being processed (to get rid of the nested if else statements)
@@ -174,10 +177,13 @@ bool getMetars() {
     resetWxClient();
     if (!wxClient->connect(WXSERVER, 443)) {
       char str[81]; str[0] = '\0';
-      Serial.print(F("Connection failed! : ")); Serial.println(wxClient->getLastSSLError(str, 80)); Serial.println(str);
-      // wxClient->stop();
-      // delay(200);
-      // my_yield();
+      Serial.print(F("Connection failed! : "));
+// TODO Error find equevelent for ESP32
+#if defined(ESP32)    
+  Serial.println(F("TODO getLastSSLError() Broken with ESP32"));
+#else
+  Serial.println(wxClient->getLastSSLError(str, 80)); Serial.println(str);
+#endif
       return false;
     }
     Serial.println(F("connected."));
@@ -477,8 +483,8 @@ bool getMetars() {
           t = millis(); // Reset timeout clock
         } else if ((millis() - t) >= (READ_TIMEOUT * 1000)) {   // Client.read
           Serial.println(F("---Timeout---"));
-          fill_solid(leds, NUM_AIRPORTS, CRGB::Cyan); // indicate status with LEDs
-          FastLED.show();
+          fill_solid(leds, NUM_OF_LEDS, CRGB::Cyan); // indicate status with LEDs
+          FastLED_show();
           //wxClient->stop();
           resetWxClient();
           delay(200);
@@ -515,11 +521,11 @@ int loopLEDSectional() {
   // will legitimately read ~6KB and is no longer a useful trigger.
   // Only reboot on true fragmentation (heap swiss-cheesed beyond recovery)
   // or if free heap is so low a crash is imminent regardless.
-  uint32_t freeHeap = ESP.getFreeHeap();
-  uint8_t  frag     = ESP.getHeapFragmentation();
+  uint32_t freeHeap = platform_free_heap();
+  uint8_t  frag     = platform_heap_frag_pct();
   Serial.print(F("Heap: free=")); Serial.print(freeHeap);
   Serial.print(F(" frag=")); Serial.print(frag);
-  Serial.print(F(" maxBlock=")); Serial.println(ESP.getMaxFreeBlockSize());
+  Serial.print(F(" maxBlock=")); Serial.println(platform_max_free_block());
   if (frag > 60 || freeHeap < 3000) {
     Serial.print(F("Heap degraded, rebooting. frag="));
     Serial.print(frag); Serial.print(F(" free=")); Serial.println(freeHeap);
@@ -532,7 +538,7 @@ int loopLEDSectional() {
   Serial.println(F("Getting METARs ..."));
   if (getMetars()) {
     Serial.println(F("Refreshing LEDs."));
-    FastLED.show();
+    FastLED_show();
     if (lightningLedsCount > 0) Serial.println(F("There is lightning"));    // Nice to see there is lightning in the serial monitor at the end of Station output
     cycleCount++; totalCycleCount++;
     if(cycleErrCount > 0) cycleErrCount--;  // Give credit for good connections
