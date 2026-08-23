@@ -1,13 +1,5 @@
 #ifndef PLATFORM_H
-#define PLATFORM_H  20260325
-/*
- * Board: ESP32S3 Dev Module
- * Recommended settings for your specific module (N8R8)
- *   Flash Size: 8MB
- *   PSRAM: Enabled
- *   PSRAM Type: OSPI PSRAM 
- *   Flash Mode: QIO
- *   Partition Scheme: Default 8MB or Huge APP
+#define PLATFORM_H  20260326
 
 /*
  * platform.h
@@ -237,12 +229,14 @@ inline void platform_reset(bool hard = true) {
 //      If your NeoPixel strip DATA line is also on GPIO8, either:
 //        (a) change LED_DATA_PIN in user_settings.h to a free GPIO (3/4/5/6/7)
 //        (b) define LED_BUILTIN to -1 and comment out setupBuiltInLED() calls.
+//      No code change needed here — LED_BUILTIN is defined by the board variant.
 // ─────────────────────────────────────────────────────────────────────────────
+
 #ifdef ESP32
   #ifndef LED_BUILTIN
    // Fallbacks for common boards
    #if CONFIG_IDF_TARGET_ESP32C3
-     #define LED_BUILTIN 8   // Common for ESP32-C3 dev boards
+      #define LED_BUILTIN 8   // Common for ESP32-C3 dev boards
     #elif CONFIG_IDF_TARGET_ESP32S3
       #define LED_BUILTIN 48  // Common for ESP32-S3 dev boards
     #else
@@ -253,6 +247,21 @@ inline void platform_reset(bool hard = true) {
   #ifndef LED_BUILTIN
     #define LED_BUILTIN 8
   #endif
+#endif
+
+// #if defined(ESP32)
+// // #if LED_BUILTIN == 30
+//  #undef LED_BUILTIN
+// // #define LED_BUILTIN 8
+// #endif
+
+#if defined(OVRD_BILED)
+  #undef LED_BUILTIN
+  #define LED_BUILTIN OVRD_BILED
+#endif
+
+#ifndef LED_BUILTIN
+ #define LED_BUILTIN 8
 #endif
 
 #endif // PLATFORM_H
