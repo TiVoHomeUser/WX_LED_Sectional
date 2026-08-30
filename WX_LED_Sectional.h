@@ -18,6 +18,12 @@
 #define WXSERVER "aviationweather.gov"
 #define   BASE_URI "/api/data/dataserver?dataSource=metars&requestType=retrieve&format=xml&hoursBeforeNow=3&mostRecentForEachStation=true&stationString="
 
+// 2026/08/29: brightness scale (0-255) applied via CRGB::nscale8() to a station's LED
+// when its raw_text ends in " $" (maintenance/equipment flag, e.g. "PWINO $"). Keeps the
+// flight-category color/hue but dims it so a marginal station is still distinguishable
+// from a fully off-line (black) one.
+#define MAINT_DIM_SCALE 64   // ~25% of normal brightness; adjust to taste
+ 
 int retVal;		// To save memory used everywhere
 
 int actualNumAirports  = NUM_OF_LEDS;  // Total without NULL locations

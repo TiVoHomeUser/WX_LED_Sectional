@@ -73,7 +73,7 @@ void setupSerial(void){
     delay(100);
     Serial.flush();
     Serial.println();
-	  Serial.print(F(copyright)); Serial.print(F(" ")); Serial.println(F(compiledate));
+	  Serial.print(F(copyright)); Serial.print(F(" ")); Serial.print(F(compiledate)); Serial.print(F(" ")); Serial.println(F(VERSION));
 }
 
 #if HTML

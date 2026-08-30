@@ -53,7 +53,15 @@ void initWxClient() {
   Serial.print(F(" Raw: "));
   Serial.println(rawText);
 #endif
-  if (strstr(wxstring, "TS") != NULL) {
+
+  // 2026/08/23: maintenance/equipment flag "$" is the last token in raw_text
+  // (e.g. "... PWINO $" = Present Weather sensor INOperative). When set, the
+  // station's own present-weather report (which drives the "TS" lightning
+  // check below) can't be trusted, so skip the lightning trigger for it.
+  boolean maintFlag = cendsWith(rawText, " $");
+ 
+  if (!maintFlag && strstr(wxstring, "TS") != NULL) {
+ //  if (strstr(wxstring, "TS") != NULL) {
     Serial.println(F("... found lightning!"));
     if(lightningLedsCount < MAX_LIGHTNING) lightningLeds[lightningLedsCount++] = led;
     mtrsf[led].mtrlighting = true;         // For Button to display lighting
@@ -89,6 +97,15 @@ void initWxClient() {
   mtrsf[led].mtrgusts = gusts;
   mtrsf[led].rawText = rawText;
   total_C_StringLen += strlen(rawText);
+    // Dim rather than blank — the flight category (if any came through) is still
+  // the best guess available, just flagged as suspect by the station itself.
+  if (maintFlag) {
+    leds[led].nscale8(MAINT_DIM_SCALE);
+#if WX_DEBUG
+    Serial.print(F("\t")); Serial.print(identifier); Serial.println(F(" maintenance flag $ - dimming"));
+#endif
+  }
+
 } // doColor()
 
 // in good weather currentLine length = 220 I was getting much larger values when weather was bad b4 isAscii check was added

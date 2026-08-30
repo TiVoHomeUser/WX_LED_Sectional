@@ -72,6 +72,12 @@
  *  Due to conflects with LED string added 
  *    X  WiFi.setSleepMode() where WiFi is setup
  *    Over-ride FastLED.Show with FastLED_Show to block WiFi interferance.
+ * 2026/08/23
+ *  Station that is broken giving invalid data the Remarks have the $
+ *  in my case PWINO $ Present Weather Identifer Not OPerating 
+ *    Need to detect this and either blank the LED or maybee dim the LED  
+ *    
+ *
  */
 
 #include "Arduino.h"
