@@ -22,7 +22,8 @@
 // when its raw_text ends in " $" (maintenance/equipment flag, e.g. "PWINO $"). Keeps the
 // flight-category color/hue but dims it so a marginal station is still distinguishable
 // from a fully off-line (black) one.
-#define MAINT_DIM_SCALE 64   // ~25% of normal brightness; adjust to taste
+// Scale value: Accepts a uint8_t value from 0 to 255, where 255 means 100% brightness (no change) and 0 dims the pixel completely to black.
+//#define MAINT_DIM_SCALE 128   // 128 = 50% 064 = 25% of normal brightness; adjust to taste
  
 int retVal;		// To save memory used everywhere
 

@@ -43,6 +43,13 @@ const static int numOfAirportsGet = 100;// Number of airports that are download 
 #define DO_WINDS  true                  // color LEDs for high winds
 #define DO_LIGHTNING true               // Lightning uses more power, but is cool.
 
+// 2026/08/29: brightness scale (0-255) applied via CRGB::nscale8() to a station's LED
+// when its raw_text ends in " $" (maintenance/equipment flag, e.g. "PWINO $"). Keeps the
+// flight-category color/hue but dims it so a marginal station is still distinguishable
+// from a fully off-line (black) one.
+// Scale value: Accepts a uint8_t value from 0 to 255, where 255 means 100% brightness (no change) and 0 dims the pixel completely to black.
+#define MAINT_DIM_SCALE 128   // 128 = 50% 064 = 25% of normal brightness; adjust to taste
+
 #define LIGHT_OFFSET 0				 	      // LED intensity -128 to 127 
 										                  // lightOffset can be adjusted using the slider on main page if html enabled.
 #define USE_LIGHT_SENSOR true			    // Set USE_LIGHT_SENSOR to true if you're using any light sensor.
